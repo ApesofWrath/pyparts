@@ -1,0 +1,87 @@
+label {
+  font-weight: bold;
+}
+.label {
+  cursor: default;
+}
+.label-status-2 {
+  background-color: #38e;
+}
+.label-status-unused {
+  background-color: #f77;
+}
+.label-status-3 {
+  background-color: #f90;
+}
+.label-status-5 {
+  background-color: #bb0;
+}
+.label-status-4 {
+  background-color: #0bb;
+}
+.label-status-outsourced {
+  background-color: #f06;
+}
+.label-status-6 {
+  background-color: #b0b;
+}
+.label-status-7 {
+  background-color: #796;
+}
+.label-status-9 {
+  background-color: #666;
+}
+.label-status-done {
+  background-color: #3d6;
+}
+.label-status-8 {
+  background-color: #3d6;
+}
+.label-status-1 {
+  background-color: rgb(127, 134, 134);
+}
+.label-status-in_progress {
+  background-color: #38e;
+}
+.label-status-10 {
+  background-color: #3d6;
+}
+.dashboard-label {
+  padding: 2px 4px;
+  color: #ffffff;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+.dashboard-part {
+  width: 115px;
+  height: 25px;
+  line-height: 25px;
+  text-align: center;
+  border: 1px solid black;
+  float: left;
+  margin: 3px;
+  font-weight: bold;
+  color: black;
+}
+.dashboard-status {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+.priority-0 {
+  background-color: #fa4;
+}
+.priority-1 {
+  background-color: #4a7;
+}
+.priority-2 {
+  background-color: #aaa;
+}
+.table th a {
+  color: black;
+}
+
+li > h4 {
+  display: inline-block;
+}
+

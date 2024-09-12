@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span2">
+        <h2>Projects</h2>
+    </div>
+    <div class="pull-right" style="margin-top: 20px;">
+        {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
+        <a href="/newproject" class="btn btn-success btn-small">
+            <i class="icon-white icon-file"></i> New Project
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if project_list %}
+<table class="table table-striped table-condensed table-bordered">
+    <thead>
+        <tr>
+            <th>Project</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in project_list %}
+        <tr>
+            <td><a href="/projects/{{ project.id }}/">{{ project.name }}</a></td>
+            <td>{{ project.name }}</td>
+            <td>
+                {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
+                <a href="/projects/{{ project.id }}/delete" class="btn btn-danger btn-small">
+                    <i class="icon-white icon-trash"></i> Delete
+                </a>
+                {% endif %}
+            </td>           
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endif %}
+
+{% endblock content %}

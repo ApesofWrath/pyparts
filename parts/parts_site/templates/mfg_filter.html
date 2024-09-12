@@ -1,0 +1,47 @@
+<div class="tab-list" role="tablist">
+    <button hx-get="todo" {% if current_filter == "todo" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">Todo</button>
+    {% for value, label in mfg_types %}
+    <button hx-get="{{ value }}" {% if current_filter == value %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">{{ label }}</button>
+    {% endfor %}
+    <button hx-get="complete" {% if current_filter == "complete" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">Complete</button>
+</div>
+<div id="tab-content" role="tabpanel" class="tab-content">
+
+    {% if parts_list %}
+    <table class="table table-striped table-condensed table-bordered">
+        <thead>
+            <tr>
+                <th>Part Number</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Material</th>
+                <th>Qty</th>
+                <th>Type</th>
+                <th>Drawing</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts_list %}
+            <tr>
+                <td><a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}">{{ part.part_number }}</a></td>
+                <td>{{ part.name }}</td>
+                <td>
+                    <span class="label label-status-{{ part.status }}">{{ part.get_status_display }}</span>
+                </td>
+                <td>{{ part.material }}</td>
+                <td>{{ part.quantity }}</td>
+                <td>{{ part.get_mfg_type_display }}</td>
+                <td>{% if part.drawing %}<a href="{{ part.drawing.url }}">Download</a>{% endif %}</td>
+                <td>
+                    <a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}/edit/"
+                        class="btn btn-primary btn-small">
+                        <i class="icon-white icon-pencil"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>

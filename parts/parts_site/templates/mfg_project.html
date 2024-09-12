@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<body class="is-preload">
+
+    <h3>{{ project.name }} - All Parts</h3>
+
+    <div id="tabs" hx-get="todo" hx-trigger="load delay:100ms" hx-target="#tabs" hx-swap="innerHTML"></div>
+
+</body>
+{% endblock content %}

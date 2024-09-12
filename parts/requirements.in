@@ -1,0 +1,6 @@
+django
+django-allauth[socialaccount]
+django-storages[google]
+django-environ
+google-cloud-secret-manager
+psycopg2-binary

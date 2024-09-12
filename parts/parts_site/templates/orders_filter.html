@@ -1,0 +1,40 @@
+<div class="tab-list" role="tablist">
+    <button hx-get="filters/ready" {% if current_filter == "ready" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">Ready to Order</button>
+    <button hx-get="filters/new" {% if current_filter == "new" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">New Orders</button>
+    <button hx-get="filters/placed" {% if current_filter == "placed" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">Placed Orders</button>
+    <button hx-get="filters/received" {% if current_filter == "received" %} class="selected" {% endif %} role="tab" aria-selected="true" aria-controls="tab-content">Received Orders</button>
+</div><div id="tab-content" role="tabpanel" class="tab-content">
+    {% if order_list %}
+    <table class="table table-striped table-condensed table-bordered">
+        <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Total Cost</th>
+                <th>Order Placed</th>
+                <th>Order Recv'd</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in order_list %}
+            <tr>
+                <td><a href="{{ order.id }}">{{ order.vendor }}</a></td>
+                <td>
+                    <span class="label label-status-{{ order.status }}">{{ order.get_status_display }}</span>
+                </td>
+                <td>{{ order.order_total }}</td>
+                <td>{{ order.order_placed_date }}</td>
+                <td>{{ order.order_recv_date }}</td>
+                <td>
+                    <a href="{{ order.id }}/edit/"
+                        class="btn btn-primary btn-small">
+                        <i class="icon-white icon-pencil"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>

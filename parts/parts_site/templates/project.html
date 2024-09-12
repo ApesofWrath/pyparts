@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<body class="is-preload">
+
+    <h3>{{ project.name }} - All Parts and Assemblies</h3>
+    {% include 'part_assembly_list.html' %}
+</body>
+{% endblock content %}

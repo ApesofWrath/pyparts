@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<body class="is-preload">
+
+    <div class="pull-right" style="margin-top: 15px;">
+        <a href="newpart" class="btn btn-success btn-small">
+            <i class="icon-white icon-cog"></i> New Part
+        </a>
+        <a href="newassembly" class="btn btn-success btn-small">
+            <i class="icon-white icon-th"></i> New Assembly
+        </a>
+    </div>
+    <h3>{{ c_assembly.name }} - All Parts and Assemblies</h3>
+
+    <div>
+        <a href="/projects/{{ project.id }}"><b>{{ project.name }}</b></a>
+        {% if assembly.assembly %}
+        <i class="icon-chevron-right"></i> {{ c_assembly.assembly }}
+        {% endif %}
+        <i class="icon-chevron-right"></i> <b>{{ c_assembly.name }}</b>
+    </div>
+    <br />
+    {% include "part_assembly_list.html" %}
+</body>
+{% endblock content %}

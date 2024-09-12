@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<body class="is-preload">
+
+    <div class="pull-right" style="margin-top: 15px;">
+        {% if auto_add %}
+        <a href="autoadd" class="btn btn-success btn-small">
+            <i class="icon-white icon-shopping-cart"></i> Create Cart
+        </a>
+        {% endif %}
+        <a href="edit" class="btn btn-success btn-small">
+            <i class="icon-white icon-cog"></i> Edit Order
+        </a>
+    </div>
+    <h2>{{ order.vendor }} Order - Details</h2>
+
+    <br />
+
+    {% if item_list %}
+    <table class="table table-striped table-condensed table-bordered">
+        <thead>
+            <tr>
+                <th>Part Number</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Subtotal</th>
+                <th>Requester</th>
+                <th>Justification</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in item_list %}
+            <tr>
+                <td><a href="{{item.link}}">{{ item.part_number }}</a></td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.unit_price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{% widthratio item.unit_price 1 item.quantity %}</td>
+                <td>{{ item.requested_by.first_name }} {{ item.requested_by.last_name }}</td>
+                <td>{{ item.justification }}</td>
+                <td>
+                    {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
+                    <a href="item/{{ item.id }}/delete" class="btn btn-danger btn-small">
+                        <i class="icon-white icon-trash"></i> Delete
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+
+    {% endblock content %}
