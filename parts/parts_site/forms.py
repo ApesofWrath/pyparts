@@ -41,6 +41,10 @@ class PartFormEdit(forms.ModelForm):
         model = Part
         fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
     def clean(self):
         super().clean()
 
@@ -55,10 +59,10 @@ class PartFormEdit(forms.ModelForm):
                 self._errors["mfg_type"] = self.error_class(["Manufacturing method required to advance status"])
 
         if self.cleaned_data.get("status") == PartStatus.DESIGN_REVIEWED:
-            if not self.request.user.groups.filter(name='mentors').exists():
+            if not self.user.groups.filter(name='mentors').exists():
                 self._errors["Status"] = self.error_class(["Only a mentor can complete this step"])
         if self.cleaned_data.get("status") in [PartStatus.MFG_REVIEWED, PartStatus.QUALITY_CHECKED] :
-            if not self.request.user.groups.filter(name='leads').exists():
+            if not self.user.groups.filter(name='leads').exists():
                 self._errors["Status"] = self.error_class(["Only a lead can complete this step"])
 
 
