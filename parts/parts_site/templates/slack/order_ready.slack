@@ -1,0 +1,6 @@
+{% extends django_slack %}
+
+{% block channel %}#orders{% endblock %}
+
+{% block text %}
+{% endblock %}

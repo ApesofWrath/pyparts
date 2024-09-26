@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from storages.backends.gcloud import GoogleCloudStorage
+
+from django_slack import slack_message
 
 #PART MANAGEMENT MODELS
 
@@ -104,6 +106,54 @@ class Order(models.Model):
 
     def __str__(self):
         return self.order_id
+    
+@receiver(pre_save, sender=Order)
+def send_slack_message_on_ready(sender, instance, **kwargs):
+    # Check if this is an existing order (has a primary key) and its status is being updated to READY
+    if instance.pk is not None:
+        old_instance = Order.objects.get(pk=instance.pk)
+        if old_instance.status != OrderStatus.READY and instance.status == OrderStatus.READY:
+            attachments = [
+                {
+                'title': f'{instance.vendor} order is ready to order',
+                'fields': [
+                    {
+                        'title': 'Order Total',
+                        'value': f'${instance.order_total}',
+                        'short': False
+                    },
+                    {
+                        'title': 'Link to Order',
+                        'value': f'<https://parts.team668.org/orders/{instance.pk}/>',
+                        'short': False
+                    },
+                ]
+                },
+            ]
+            slack_message('slack/order_ready.slack', {
+                'order': instance,
+            }, attachments=attachments)
+        if old_instance.status != OrderStatus.PLACED and instance.status == OrderStatus.PLACED:
+            attachments = [
+                {
+                'title': f'{instance.vendor} order is placed',
+                'fields': [
+                    {
+                        'title': 'Order Total',
+                        'value': f'${instance.order_total}',
+                        'short': False
+                    },
+                    {
+                        'title': 'Link to Order',
+                        'value': f'<https://parts.team668.org/orders/{instance.pk}/>',
+                        'short': False
+                    },
+                ]
+                },
+            ]
+            slack_message('slack/order_ready.slack', {
+                'order': instance,
+            }, attachments=attachments)
     
 class Item(models.Model):
     name = models.CharField(max_length=200)
