@@ -20,10 +20,13 @@ django==5.1
     # via
     #   -r requirements.in
     #   django-allauth
+    #   django-slack
     #   django-storages
 django-allauth[socialaccount]==64.1.0
     # via -r requirements.in
 django-environ==0.11.2
+    # via -r requirements.in
+django-slack==5.19.0
     # via -r requirements.in
 django-storages[google]==1.14.4
     # via -r requirements.in
@@ -96,6 +99,7 @@ pyjwt[crypto]==2.9.0
 requests==2.32.3
     # via
     #   django-allauth
+    #   django-slack
     #   google-api-core
     #   google-cloud-storage
     #   requests-oauthlib

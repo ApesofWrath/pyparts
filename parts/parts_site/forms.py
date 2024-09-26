@@ -83,7 +83,7 @@ class OrderFormEdit(forms.ModelForm):
     def clean(self):
         super().clean()
 
-        if self.cleaned_data.get("status") >= OrderStatus.READY:
+        if self.cleaned_data.get("status") >= OrderStatus.PLACED:
             if self.cleaned_data.get("order_placed_date") == None:
                 self._errors["order_placed_date"] = self.error_class(["Order Placed Date required to advance status"])
         if self.cleaned_data.get("status") >= OrderStatus.RECEIVED:
