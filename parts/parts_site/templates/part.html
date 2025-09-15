@@ -511,60 +511,58 @@
 
             console.log('Found', lineCount, 'entities in DXF file');
 
-            if (vertices.length > 0) {
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-                
-                const material = new THREE.LineBasicMaterial({ 
-                    vertexColors: true,
-                    linewidth: 1
-                });
-                const linesMesh = new THREE.LineSegments(geometry, material);
-                scene.add(linesMesh);
-                
-                console.log('Successfully rendered DXF with', vertices.length / 6, 'line segments');
-            } else {
-                console.log('No geometry found in DXF, showing placeholder');
-                createPlaceholderGeometry(scene, 'DXF', 0xff6600);
-            }
+                    if (vertices.length > 0) {
+                        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+                        
+                        const material = new THREE.LineBasicMaterial({ 
+                            vertexColors: true,
+                            linewidth: 1
+                        });
+                        const linesMesh = new THREE.LineSegments(geometry, material);
+                        scene.add(linesMesh);
+                        
+                        console.log('Successfully rendered DXF with', vertices.length / 6, 'line segments');
+                        
+                        // Position camera based on the geometry
+                        let minX = Infinity, maxX = -Infinity;
+                        let minY = Infinity, maxY = -Infinity;
+                        let minZ = Infinity, maxZ = -Infinity;
+                        
+                        for (let i = 0; i < vertices.length; i += 3) {
+                            minX = Math.min(minX, vertices[i]);
+                            maxX = Math.max(maxX, vertices[i]);
+                            minY = Math.min(minY, vertices[i + 1]);
+                            maxY = Math.max(maxY, vertices[i + 1]);
+                            minZ = Math.min(minZ, vertices[i + 2]);
+                            maxZ = Math.max(maxZ, vertices[i + 2]);
+                        }
+                        
+                        const centerX = (minX + maxX) / 2;
+                        const centerY = (minY + maxY) / 2;
+                        const centerZ = (minZ + maxZ) / 2;
+                        const sizeX = maxX - minX;
+                        const sizeY = maxY - minY;
+                        const sizeZ = maxZ - minZ;
+                        const maxSize = Math.max(sizeX, sizeY, sizeZ);
+                        
+                        console.log('DXF bounding box:', { minX, maxX, minY, maxY, minZ, maxZ, maxSize });
+                        
+                        // Position camera based on geometry size
+                        const distance = maxSize * 2;
+                        camera.position.set(centerX, centerY, centerZ + distance);
+                        camera.lookAt(centerX, centerY, centerZ);
+                    } else {
+                        console.log('No geometry found in DXF, showing placeholder');
+                        createPlaceholderGeometry(scene, 'DXF', 0xff6600);
+                    }
         } catch (error) {
             console.error('Error parsing DXF:', error);
             createPlaceholderGeometry(scene, 'DXF', 0xff6600);
         }
 
-        // Position camera closer and add auto-fit to geometry
-        if (vertices.length > 0) {
-            // Calculate bounding box for the geometry
-            let minX = Infinity, maxX = -Infinity;
-            let minY = Infinity, maxY = -Infinity;
-            let minZ = Infinity, maxZ = -Infinity;
-            
-            for (let i = 0; i < vertices.length; i += 3) {
-                minX = Math.min(minX, vertices[i]);
-                maxX = Math.max(maxX, vertices[i]);
-                minY = Math.min(minY, vertices[i + 1]);
-                maxY = Math.max(maxY, vertices[i + 1]);
-                minZ = Math.min(minZ, vertices[i + 2]);
-                maxZ = Math.max(maxZ, vertices[i + 2]);
-            }
-            
-            const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
-            const centerZ = (minZ + maxZ) / 2;
-            const sizeX = maxX - minX;
-            const sizeY = maxY - minY;
-            const sizeZ = maxZ - minZ;
-            const maxSize = Math.max(sizeX, sizeY, sizeZ);
-            
-            console.log('DXF bounding box:', { minX, maxX, minY, maxY, minZ, maxZ, maxSize });
-            
-            // Position camera based on geometry size
-            const distance = maxSize * 2;
-            camera.position.set(centerX, centerY, centerZ + distance);
-            camera.lookAt(centerX, centerY, centerZ);
-        } else {
-            camera.position.z = 5;
-        }
+        // Position camera - will be set after geometry is created
+        camera.position.z = 5;
 
         // Add controls for rotation and zoom
         let mouseX = 0, mouseY = 0;
@@ -651,6 +649,7 @@
         let container = document.getElementById('threejs-container');
         let loadingSpinner = document.getElementById('loadingSpinner');
         let previewContent = document.getElementById('previewContent');
+        let threejsContainer = document.getElementById('threejs-container');
 
         console.log('3D viewer elements:', {
             container: !!container,
