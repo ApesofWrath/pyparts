@@ -398,7 +398,15 @@
         const scene = new THREE.Scene();
         const containerWidth = container.offsetWidth || 400;
         const containerHeight = container.offsetHeight || 400;
-        const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
+        
+        // Create orthographic camera for 2D drawings
+        const aspect = containerWidth / containerHeight;
+        const frustumSize = 10; // Will be updated after geometry is loaded
+        const camera = new THREE.OrthographicCamera(
+            -frustumSize * aspect / 2, frustumSize * aspect / 2,
+            frustumSize / 2, -frustumSize / 2,
+            0.1, 1000
+        );
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         
         renderer.setSize(containerWidth, containerHeight);
@@ -550,22 +558,18 @@
                         
                         // Position camera for 2D view (orthographic projection)
                         const distance = Math.max(maxSize * 1.2, 10); // Closer view
-                        camera.position.set(centerX, centerY, centerZ + distance);
-                        camera.lookAt(centerX, centerY, centerZ);
                         
-                        // Set up orthographic camera for 2D drawings
+                        // Update orthographic camera frustum based on geometry size
                         const aspect = containerWidth / containerHeight;
                         const frustumSize = maxSize * 1.5;
-                        const orthoCamera = new THREE.OrthographicCamera(
-                            -frustumSize * aspect / 2, frustumSize * aspect / 2,
-                            frustumSize / 2, -frustumSize / 2,
-                            0.1, 1000
-                        );
-                        orthoCamera.position.set(centerX, centerY, centerZ + distance);
-                        orthoCamera.lookAt(centerX, centerY, centerZ);
                         
-                        // Replace perspective camera with orthographic
-                        camera = orthoCamera;
+                        camera.left = -frustumSize * aspect / 2;
+                        camera.right = frustumSize * aspect / 2;
+                        camera.top = frustumSize / 2;
+                        camera.bottom = -frustumSize / 2;
+                        camera.position.set(centerX, centerY, centerZ + distance);
+                        camera.lookAt(centerX, centerY, centerZ);
+                        camera.updateProjectionMatrix();
                     } else {
                         console.log('No geometry found in DXF, showing placeholder');
                         createPlaceholderGeometry(scene, 'DXF', 0xff6600);
