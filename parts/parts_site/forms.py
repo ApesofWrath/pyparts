@@ -1,5 +1,6 @@
 # import form class from django
 from django import forms
+import os
  
 # import GeeksModel from models.py
 from .models import *
@@ -51,6 +52,15 @@ class PartRevisionForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
+    def clean_drawing(self):
+        drawing = self.cleaned_data.get('drawing')
+        if drawing:
+            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
+            file_extension = os.path.splitext(drawing.name)[1].lower()
+            if file_extension not in allowed_extensions:
+                raise forms.ValidationError(f"File type {file_extension} not allowed. Allowed types: {', '.join(allowed_extensions)}")
+        return drawing
+
     def clean(self):
         super().clean()
 
@@ -82,6 +92,15 @@ class PartRevisionCreateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+    def clean_drawing(self):
+        drawing = self.cleaned_data.get('drawing')
+        if drawing:
+            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
+            file_extension = os.path.splitext(drawing.name)[1].lower()
+            if file_extension not in allowed_extensions:
+                raise forms.ValidationError(f"File type {file_extension} not allowed. Allowed types: {', '.join(allowed_extensions)}")
+        return drawing
 
     def clean(self):
         super().clean()
