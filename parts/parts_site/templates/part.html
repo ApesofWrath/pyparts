@@ -12,6 +12,11 @@
         <a href="{% url 'newrevision' project.id assembly.id part.id %}" class="btn btn-primary btn-small">
             <i class="icon-white icon-plus"></i> New Revision
         </a>
+        {% if can_delete_revisions and revisions|length > 1 %}
+        <a href="#" onclick="confirmDeleteRevision()" class="btn btn-danger btn-small">
+            <i class="icon-white icon-trash"></i> Delete Revision
+        </a>
+        {% endif %}
         {% else %}
         <a href="edit" class="btn btn-success btn-small">
             <i class="icon-white icon-cog"></i> Edit Part
@@ -80,6 +85,12 @@
         var select = document.getElementById('revision-select');
         var url = select.value;
         window.location.href = url;
+    }
+    
+    function confirmDeleteRevision() {
+        if (confirm('Are you sure you want to delete this revision? This action cannot be undone.')) {
+            window.location.href = "{% url 'deleterevision' project.id assembly.id part.id revision.id %}";
+        }
     }
     </script>
 

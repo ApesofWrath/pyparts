@@ -254,11 +254,16 @@ def part(request, project_id, assembly_id, part_id, revision_id=None):
     # Get all revisions for the dropdown
     revisions = current_part.revisions.all()
     
+    # Check if user can delete revisions
+    can_delete_revisions = (request.user.groups.filter(name='leads').exists() or 
+                           request.user.groups.filter(name='mentors').exists())
+    
     context = {"project": current_project,
                "assembly": current_assembly,
                "part": current_part,
                "revision": current_revision,
                "revisions": revisions,
+               "can_delete_revisions": can_delete_revisions,
                }
 
     return render(request, "part.html", context)
@@ -309,3 +314,37 @@ def editrevision(request, project_id, assembly_id, part_id, revision_id):
     context['part'] = current_revision.part
     context['revision'] = current_revision
     return render(request, "editobject.html", context)
+
+@login_required
+def deleterevision(request, project_id, assembly_id, part_id, revision_id):
+    current_revision = get_object_or_404(PartRevision, pk=revision_id, part_id=part_id)
+    current_part = current_revision.part
+    
+    # Check if user has permission to delete revisions
+    if not (request.user.groups.filter(name='leads').exists() or 
+            request.user.groups.filter(name='mentors').exists()):
+        from django.contrib import messages
+        messages.error(request, "Only leads and mentors can delete revisions.")
+        return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
+    
+    # Check if this is the only revision
+    if current_part.revisions.count() <= 1:
+        from django.contrib import messages
+        messages.error(request, "Cannot delete the last revision of a part.")
+        return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
+    
+    # Check if this is the latest revision
+    if current_part.latest_revision == current_revision:
+        # Find the next latest revision
+        next_latest = current_part.revisions.exclude(id=revision_id).first()
+        if next_latest:
+            current_part.latest_revision = next_latest
+            current_part.save()
+    
+    # Delete the revision
+    current_revision.delete()
+    
+    from django.contrib import messages
+    messages.success(request, f"Revision {current_revision.revision_number} has been deleted.")
+    
+    return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
