@@ -4,3 +4,4 @@ django-environ
 django-slack
 psycopg2-binary
 gunicorn
+whitenoise
