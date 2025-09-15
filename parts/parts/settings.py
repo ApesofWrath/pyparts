@@ -36,7 +36,7 @@ else:
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='temp-secret-key-for-build-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', default=False)
@@ -119,8 +119,8 @@ SOCIALACCOUNT_PROVIDERS = {
         # (``socialaccount`` app) containing the required client
         # credentials, or list them here:
         'APP': {
-            'client_id': env('G_CLIENT_ID'),
-            'secret': env('G_SECRET'),
+            'client_id': env('G_CLIENT_ID', default=''),
+            'secret': env('G_SECRET', default=''),
             'key': ''
         },
         'SCOPE': [
@@ -142,7 +142,7 @@ WSGI_APPLICATION = 'parts.wsgi.application'
 
 # Database
 # Use django-environ to parse the connection string
-DATABASES = {"default": env.db()}
+DATABASES = {"default": env.db(default='sqlite:///db.sqlite3')}
 
 
 
@@ -195,4 +195,4 @@ STATICFILES_DIRS = []
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SLACK_TOKEN = env('SLACK_TOKEN')
+SLACK_TOKEN = env('SLACK_TOKEN', default='')

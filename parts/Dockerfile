@@ -28,6 +28,11 @@ COPY . /app/
 # Create staticfiles directory
 RUN mkdir -p /app/static
 
+# Set a temporary SECRET_KEY for build-time operations
+ENV SECRET_KEY=temp-secret-key-for-build
+ENV DEBUG=False
+ENV DATABASE_URL=sqlite:///db.sqlite3
+
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
