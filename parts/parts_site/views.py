@@ -271,8 +271,8 @@ def part(request, project_id, assembly_id, part_id, revision_id=None):
     else:
         current_revision = current_part.latest_revision
     
-    # Get all revisions for the dropdown
-    revisions = current_part.revisions.all()
+    # Get all revisions for the dropdown, ordered by revision letter
+    revisions = current_part.revisions.order_by('-revision_number')
     
     # Check if user can delete revisions
     can_delete_revisions = (request.user.groups.filter(name='leads').exists() or 
@@ -303,7 +303,7 @@ def newrevision(request, project_id, assembly_id, part_id):
             return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
     else:
         # Set default revision number
-        latest_revision = current_part.revisions.first()
+        latest_revision = current_part.revisions.order_by('-revision_number').first()
         if latest_revision:
             # Increment revision letter
             next_revision = chr(ord(latest_revision.revision_number) + 1)

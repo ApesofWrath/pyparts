@@ -76,7 +76,7 @@ class PartRevision(models.Model):
     notes = models.TextField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-revision_number']
         unique_together = ['part', 'revision_number']
 
     def __str__(self):
@@ -114,10 +114,13 @@ def update_assembly_status(sender, instance, **kwargs):
 
 @receiver(post_save,sender=PartRevision)
 def update_part_latest_revision(sender, instance, **kwargs):
-    # Update the part's latest_revision to point to this revision
+    # Update the part's latest_revision to point to the highest revision letter
     part = instance.part
-    part.latest_revision = instance
-    part.save()
+    # Get the revision with the highest revision_number (latest letter)
+    latest_revision = part.revisions.order_by('-revision_number').first()
+    if latest_revision:
+        part.latest_revision = latest_revision
+        part.save()
 
 #ORDER MANAGEMENT MODELS
 
