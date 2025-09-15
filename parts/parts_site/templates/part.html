@@ -48,8 +48,8 @@
     </div>
     <br />
 
-    <div class="row">
-        <div class="col-md-6">
+    <div class="row" style="margin: 0;">
+        <div class="col-md-6" style="padding-right: 15px;">
             <table class="table table-striped table-condensed table-bordered" style="width: auto;">
                 <tr>
                   <td><b>Project</b></td>
@@ -89,7 +89,7 @@
               </table>
         </div>
         
-        <div class="col-md-6">
+        <div class="col-md-6" style="padding-left: 15px;">
             {% if revision and revision.drawing %}
             <div class="drawing-preview-panel">
                 <h4>Drawing Preview</h4>
@@ -147,11 +147,24 @@
     // Auto-load drawing preview when page loads
     {% if revision and revision.drawing %}
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Loading preview for:', '{{ revision.drawing.name }}');
+        
+        // Add a timeout to show something if preview fails
+        setTimeout(function() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            if (loadingSpinner && loadingSpinner.style.display !== 'none') {
+                console.log('Preview loading timeout - showing fallback');
+                showPreviewError();
+            }
+        }, 10000); // 10 second timeout
+        
         loadPreview('{{ revision.drawing.url }}', '{{ revision.drawing.name }}');
     });
     {% endif %}
 
     function loadPreview(fileUrl, fileName) {
+        console.log('loadPreview called with:', fileUrl, fileName);
+        
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const previewError = document.getElementById('previewError');
@@ -159,28 +172,42 @@
         const imageContainer = document.getElementById('image-container');
         const pdfContainer = document.getElementById('pdf-container');
 
+        console.log('Elements found:', {
+            loadingSpinner: !!loadingSpinner,
+            previewContent: !!previewContent,
+            previewError: !!previewError,
+            threejsContainer: !!threejsContainer,
+            imageContainer: !!imageContainer,
+            pdfContainer: !!pdfContainer
+        });
+
         // Reset display
-        loadingSpinner.style.display = 'block';
-        previewContent.style.display = 'none';
-        previewError.style.display = 'none';
-        threejsContainer.style.display = 'none';
-        imageContainer.style.display = 'none';
-        pdfContainer.style.display = 'none';
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (previewContent) previewContent.style.display = 'none';
+        if (previewError) previewError.style.display = 'none';
+        if (threejsContainer) threejsContainer.style.display = 'none';
+        if (imageContainer) imageContainer.style.display = 'none';
+        if (pdfContainer) pdfContainer.style.display = 'none';
 
         // Get file extension
         const fileExtension = fileName.split('.').pop().toLowerCase();
+        console.log('File extension:', fileExtension);
         
         // Determine preview type and load accordingly
         if (['stl', 'step', 'stp', 'iges', 'dxf'].includes(fileExtension)) {
+            console.log('Loading 3D preview for:', fileExtension);
             load3DPreview(fileUrl, fileExtension);
         } else if (['pdf'].includes(fileExtension)) {
+            console.log('Loading PDF preview');
             loadPDFPreview(fileUrl);
         } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(fileExtension)) {
+            console.log('Loading image preview');
             loadImagePreview(fileUrl);
         } else if (['dwg'].includes(fileExtension)) {
-            // DWG files - show placeholder with download option
+            console.log('Loading DWG placeholder');
             showDWGPlaceholder(fileUrl);
         } else {
+            console.log('Showing preview error for unsupported type');
             showPreviewError();
         }
     }
@@ -636,28 +663,52 @@
     }
 
     function loadImagePreview(fileUrl) {
+        console.log('loadImagePreview called with:', fileUrl);
+        
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const imageContainer = document.getElementById('image-container');
         const previewImage = document.getElementById('preview-image');
 
+        console.log('Image preview elements:', {
+            loadingSpinner: !!loadingSpinner,
+            previewContent: !!previewContent,
+            imageContainer: !!imageContainer,
+            previewImage: !!previewImage
+        });
+
+        if (!previewImage) {
+            console.error('preview-image element not found');
+            showPreviewError();
+            return;
+        }
+
         previewImage.src = fileUrl;
         previewImage.onload = function() {
-            loadingSpinner.style.display = 'none';
-            previewContent.style.display = 'block';
-            imageContainer.style.display = 'block';
+            console.log('Image loaded successfully');
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            if (previewContent) previewContent.style.display = 'block';
+            if (imageContainer) imageContainer.style.display = 'block';
         };
-        previewImage.onerror = function() {
+        previewImage.onerror = function(error) {
+            console.error('Image failed to load:', error);
             showPreviewError();
         };
     }
 
     function showPreviewError() {
+        console.log('showPreviewError called');
+        
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewError = document.getElementById('previewError');
         
-        loadingSpinner.style.display = 'none';
-        previewError.style.display = 'block';
+        console.log('Error elements:', {
+            loadingSpinner: !!loadingSpinner,
+            previewError: !!previewError
+        });
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewError) previewError.style.display = 'block';
     }
 
     </script>
