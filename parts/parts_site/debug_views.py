@@ -74,6 +74,7 @@ def test_media_access(request):
     Test if media files are accessible
     """
     from django.conf import settings
+    from django.http import HttpResponse
     import os
     
     media_root = settings.MEDIA_ROOT
@@ -86,10 +87,14 @@ def test_media_access(request):
             for filename in filenames:
                 rel_path = os.path.relpath(os.path.join(root, filename), media_root)
                 file_url = f"{media_url}{rel_path}"
+                full_path = os.path.join(root, filename)
+                file_exists = os.path.exists(full_path)
                 files.append({
                     'path': rel_path,
                     'url': file_url,
-                    'full_path': os.path.join(root, filename)
+                    'full_path': full_path,
+                    'exists': file_exists,
+                    'readable': os.access(full_path, os.R_OK) if file_exists else False
                 })
     
     return JsonResponse({
@@ -97,5 +102,30 @@ def test_media_access(request):
         'media_url': media_url,
         'files': files,
         'media_root_exists': os.path.exists(media_root),
-        'media_root_writable': os.access(media_root, os.W_OK) if os.path.exists(media_root) else False
+        'media_root_writable': os.access(media_root, os.W_OK) if os.path.exists(media_root) else False,
+        'debug_mode': settings.DEBUG
     })
+
+def test_media_file(request, file_path):
+    """
+    Test serving a specific media file
+    """
+    from django.conf import settings
+    from django.http import HttpResponse, Http404
+    import os
+    
+    media_root = settings.MEDIA_ROOT
+    full_path = os.path.join(media_root, file_path)
+    
+    if not os.path.exists(full_path):
+        raise Http404("File not found")
+    
+    try:
+        with open(full_path, 'rb') as f:
+            content = f.read()
+        
+        response = HttpResponse(content, content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        return response
+    except Exception as e:
+        return HttpResponse(f"Error reading file: {str(e)}", status=500)

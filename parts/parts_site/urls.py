@@ -44,4 +44,5 @@ urlpatterns = [
     path("debug/media/", debug_views.debug_media_page, name="debug_media"),
     path("debug/test-upload/", debug_views.test_file_upload, name="test_upload"),
     path("debug/media-access/", debug_views.test_media_access, name="test_media_access"),
+    path("debug/media-file/<path:file_path>", debug_views.test_media_file, name="test_media_file"),
 ]

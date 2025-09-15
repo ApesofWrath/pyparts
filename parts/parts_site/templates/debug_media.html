@@ -28,6 +28,7 @@
                     <h3>Media Configuration</h3>
                     <p><strong>Media Root:</strong> ${data.media_root}</p>
                     <p><strong>Media URL:</strong> ${data.media_url}</p>
+                    <p><strong>Debug Mode:</strong> ${data.debug_mode ? 'Yes' : 'No'}</p>
                     <p><strong>Media Root Exists:</strong> ${data.media_root_exists ? 'Yes' : 'No'}</p>
                     <p><strong>Media Root Writable:</strong> ${data.media_root_writable ? 'Yes' : 'No'}</p>
                 `;
@@ -42,7 +43,10 @@
                                 <p><strong>Path:</strong> ${file.path}</p>
                                 <p><strong>URL:</strong> <a href="${file.url}" class="file-url" target="_blank">${file.url}</a></p>
                                 <p><strong>Full Path:</strong> ${file.full_path}</p>
-                                <a href="${file.url}" class="test-link" target="_blank">Test Download</a>
+                                <p><strong>Exists:</strong> ${file.exists ? 'Yes' : 'No'}</p>
+                                <p><strong>Readable:</strong> ${file.readable ? 'Yes' : 'No'}</p>
+                                <a href="${file.url}" class="test-link" target="_blank">Test Django Media URL</a>
+                                <a href="/debug/media-file/${file.path}" class="test-link" target="_blank">Test Direct File Access</a>
                             </div>
                         `;
                     });
