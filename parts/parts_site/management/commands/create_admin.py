@@ -7,45 +7,65 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Create or promote a user to admin status'
+    help = 'Promote an existing user to admin status'
 
     def add_arguments(self, parser):
         parser.add_argument(
             'email',
             type=str,
-            help='Email address of the user to make admin'
+            help='Email address of the existing user to make admin'
+        )
+        parser.add_argument(
+            '--create-if-not-exists',
+            action='store_true',
+            help='Create the user if they do not exist (requires --password)'
+        )
+        parser.add_argument(
+            '--password',
+            type=str,
+            help='Password for the user (only needed if creating new user)'
         )
         parser.add_argument(
             '--first-name',
             type=str,
             default='',
-            help='First name for the user (if creating new user)'
+            help='First name for the user (only needed if creating new user)'
         )
         parser.add_argument(
             '--last-name',
             type=str,
             default='',
-            help='Last name for the user (if creating new user)'
-        )
-        parser.add_argument(
-            '--password',
-            type=str,
-            help='Password for the user (if creating new user)'
+            help='Last name for the user (only needed if creating new user)'
         )
 
     def handle(self, *args, **options):
         email = options['email']
+        create_if_not_exists = options['create_if_not_exists']
+        password = options['password']
         first_name = options['first_name']
         last_name = options['last_name']
-        password = options['password']
 
         try:
             # Try to get existing user
             user = User.objects.get(email=email)
             self.stdout.write(
-                self.style.WARNING(f'User {email} already exists. Promoting to admin...')
+                self.style.SUCCESS(f'Found existing user: {email}')
             )
+            
+            # Check if user is already an admin
+            if user.is_superuser and user.is_staff:
+                self.stdout.write(
+                    self.style.WARNING(f'User {email} is already an admin!')
+                )
+                return
+                
         except ObjectDoesNotExist:
+            if not create_if_not_exists:
+                self.stdout.write(
+                    self.style.ERROR(f'User {email} does not exist. Use --create-if-not-exists to create them.')
+                )
+                return
+            
             # Create new user
             if not password:
                 self.stdout.write(
