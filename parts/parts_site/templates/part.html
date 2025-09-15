@@ -239,9 +239,9 @@
         scene.add(textMesh);
         
         // Show the preview - get elements again to ensure they're accessible
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let threejsContainer = document.getElementById('threejs-container');
         
         if (loadingSpinner) loadingSpinner.style.display = 'none';
         if (previewContent) previewContent.style.display = 'block';
@@ -249,9 +249,9 @@
     }
 
     function showDWGPlaceholder(fileUrl) {
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const imageContainer = document.getElementById('image-container');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let imageContainer = document.getElementById('image-container');
         
         // Create a placeholder for DWG files
         const placeholderDiv = document.createElement('div');
@@ -383,10 +383,10 @@
     }
 
     function initBasicDXFViewer(dxfContent) {
-        const container = document.getElementById('threejs-container');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
+        let container = document.getElementById('threejs-container');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let threejsContainer = document.getElementById('threejs-container');
 
         // Clear previous content
         while (container.firstChild) {
@@ -565,9 +565,9 @@
         window.scene = scene;
 
         // Show the preview - get elements again to ensure they're accessible
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let threejsContainer = document.getElementById('threejs-container');
         
         console.log('DXF display elements:', {
             loadingSpinner: !!loadingSpinner,
@@ -586,9 +586,9 @@
     function init3DViewer(fileUrl, fileExtension) {
         console.log('init3DViewer called with:', fileUrl, fileExtension);
         
-        const container = document.getElementById('threejs-container');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
+        let container = document.getElementById('threejs-container');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
 
         console.log('3D viewer elements:', {
             container: !!container,
@@ -658,10 +658,10 @@
                     scene.add(mesh);
                     console.log('STL mesh added to scene');
                     
-                    // Show the preview - get elements again to ensure they're accessible
-                    const loadingSpinner = document.getElementById('loadingSpinner');
-                    const previewContent = document.getElementById('previewContent');
-                    const threejsContainer = document.getElementById('threejs-container');
+                            // Show the preview - get elements again to ensure they're accessible
+                            let loadingSpinner = document.getElementById('loadingSpinner');
+                            let previewContent = document.getElementById('previewContent');
+                            let threejsContainer = document.getElementById('threejs-container');
                     
                     if (loadingSpinner) loadingSpinner.style.display = 'none';
                     if (previewContent) previewContent.style.display = 'block';
@@ -740,10 +740,10 @@
     }
 
     function loadPDFPreview(fileUrl) {
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const pdfContainer = document.getElementById('pdf-container');
-        const pdfViewer = document.getElementById('pdf-viewer');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let pdfContainer = document.getElementById('pdf-container');
+        let pdfViewer = document.getElementById('pdf-viewer');
 
         // Use Google Docs viewer for PDF preview
         pdfViewer.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(fileUrl) + '&embedded=true';
@@ -756,10 +756,10 @@
     function loadImagePreview(fileUrl) {
         console.log('loadImagePreview called with:', fileUrl);
         
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const imageContainer = document.getElementById('image-container');
-        const previewImage = document.getElementById('preview-image');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewContent = document.getElementById('previewContent');
+        let imageContainer = document.getElementById('image-container');
+        let previewImage = document.getElementById('preview-image');
 
         console.log('Image preview elements:', {
             loadingSpinner: !!loadingSpinner,
@@ -790,8 +790,8 @@
     function showPreviewError() {
         console.log('showPreviewError called');
         
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewError = document.getElementById('previewError');
+        let loadingSpinner = document.getElementById('loadingSpinner');
+        let previewError = document.getElementById('previewError');
         
         console.log('Error elements:', {
             loadingSpinner: !!loadingSpinner,
