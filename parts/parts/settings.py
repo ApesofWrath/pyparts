@@ -11,14 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
-import io
 import environ
 from urllib.parse import urlparse
 from pathlib import Path
-import google.auth.credentials
-from google.cloud import secretmanager
-from google.oauth2 import service_account
-from google.auth import compute_engine
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,18 +28,9 @@ env_file = os.path.join(BASE_DIR, ".env")
 if os.path.isfile(env_file):
     # Use a local secret file, if provided
     env.read_env(env_file)
-elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
-    # Pull secrets from Secret Manager
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-
-    client = secretmanager.SecretManagerServiceClient()
-    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
-    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
-
-    env.read_env(io.StringIO(payload))
 else:
-    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+    # Use environment variables directly
+    pass
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -55,17 +41,16 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', default=False)
 
-APPENGINE_URL = env("APPENGINE_URL", default=None)
-if APPENGINE_URL:
-    # Ensure a scheme is present in the URL before it's processed.
-    if not urlparse(APPENGINE_URL).scheme:
-        APPENGINE_URL = f"https://{APPENGINE_URL}"
+# Allow all hosts for Docker deployment
+ALLOWED_HOSTS = ["*"]
 
-    ALLOWED_HOSTS = [urlparse(APPENGINE_URL).netloc, "parts.team668.org"]
-    CSRF_TRUSTED_ORIGINS = [APPENGINE_URL]
-    SECURE_SSL_REDIRECT = True
-else:
-    ALLOWED_HOSTS = ["*"]
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://localhost",
+    "https://127.0.0.1",
+]
 
 
 # Application definition
@@ -156,14 +141,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 WSGI_APPLICATION = 'parts.wsgi.application'
 
 # Database
-# [START gaestd_py_django_database_config]
 # Use django-environ to parse the connection string
 DATABASES = {"default": env.db()}
-
-# If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
-    DATABASES["default"]["HOST"] = "127.0.0.1"
-    DATABASES["default"]["PORT"] = 5432
 
 
 
@@ -185,11 +164,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-    os.path.join(BASE_DIR, 'pyparts-6ccdc43cb41a.json')
-)
-
-GS_BUCKET_NAME = env("GS_BUCKET_NAME")
+# File storage settings (for local development)
+# In production, you might want to use AWS S3, Azure Blob Storage, or similar
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 
 # Internationalization

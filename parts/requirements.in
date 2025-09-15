@@ -1,7 +1,6 @@
 django
 django-allauth[socialaccount]
-django-storages[google]
 django-environ
 django-slack
-google-cloud-secret-manager
 psycopg2-binary
+gunicorn
