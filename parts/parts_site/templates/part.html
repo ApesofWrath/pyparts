@@ -311,43 +311,55 @@
     }
 
     function load3DPreview(fileUrl, fileExtension) {
+        console.log('load3DPreview called with:', fileUrl, fileExtension);
+        
         // Load Three.js and STLLoader dynamically
         if (!window.THREE) {
+            console.log('THREE.js not loaded, loading it now...');
             const threeScript = document.createElement('script');
             threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-            threeScript.onload = () => loadSTLLoader(fileUrl, fileExtension);
+            threeScript.onload = () => {
+                console.log('THREE.js loaded successfully');
+                loadSTLLoader(fileUrl, fileExtension);
+            };
+            threeScript.onerror = (error) => {
+                console.error('Failed to load THREE.js:', error);
+                showPreviewError();
+            };
             document.head.appendChild(threeScript);
         } else {
+            console.log('THREE.js already loaded');
             loadSTLLoader(fileUrl, fileExtension);
         }
     }
 
     function loadSTLLoader(fileUrl, fileExtension) {
+        console.log('loadSTLLoader called with:', fileUrl, fileExtension);
+        
         // Load STLLoader for STL files
         if (fileExtension === 'stl' && !window.STLLoader) {
+            console.log('STLLoader not available, loading it now...');
             const stlScript = document.createElement('script');
             stlScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js';
-            stlScript.onload = () => init3DViewer(fileUrl, fileExtension);
+            stlScript.onload = () => {
+                console.log('STLLoader loaded successfully');
+                init3DViewer(fileUrl, fileExtension);
+            };
+            stlScript.onerror = (error) => {
+                console.error('Failed to load STLLoader:', error);
+                console.log('Falling back to placeholder geometry');
+                init3DViewer(fileUrl, fileExtension);
+            };
             document.head.appendChild(stlScript);
-        } else if (fileExtension === 'dxf' && !window.DXFViewer) {
-            // Load DXF viewer library
-            loadDXFViewer(fileUrl);
+        } else if (fileExtension === 'dxf') {
+            console.log('Loading DXF with custom parser');
+            loadDXFAlternative(fileUrl);
         } else {
+            console.log('Initializing 3D viewer directly');
             init3DViewer(fileUrl, fileExtension);
         }
     }
 
-    function loadDXFViewer(fileUrl) {
-        // Try to load dxf-viewer library from CDN
-        const dxfScript = document.createElement('script');
-        dxfScript.src = 'https://unpkg.com/dxf-viewer@latest/dist/dxf-viewer.min.js';
-        dxfScript.onload = () => initDXFViewer(fileUrl);
-        dxfScript.onerror = () => {
-            console.warn('dxf-viewer library not available, trying alternative approach');
-            loadDXFAlternative(fileUrl);
-        };
-        document.head.appendChild(dxfScript);
-    }
 
     function loadDXFAlternative(fileUrl) {
         // Alternative DXF handling - try to parse basic DXF content
@@ -395,18 +407,22 @@
         directionalLight.position.set(1, 1, 1);
         scene.add(directionalLight);
 
-        // Parse basic DXF content and create geometry
+        // Parse DXF content and create geometry
         try {
             const lines = dxfContent.split('\n');
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
             const colors = [];
+            let lineCount = 0;
 
-            // Simple DXF parsing for basic shapes
+            console.log('Parsing DXF file with', lines.length, 'lines');
+
+            // Enhanced DXF parsing for multiple entity types
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
+                
                 if (line === 'LINE') {
-                    // Look for LINE entities
+                    // Parse LINE entities
                     let x1 = 0, y1 = 0, z1 = 0, x2 = 0, y2 = 0, z2 = 0;
                     for (let j = i + 1; j < Math.min(i + 20, lines.length); j++) {
                         const code = lines[j].trim();
@@ -419,21 +435,90 @@
                         else if (code === '31') z2 = value;
                     }
                     
-                    // Add line vertices
-                    vertices.push(x1, y1, z1, x2, y2, z2);
-                    colors.push(0, 0, 0, 0, 0, 0); // Black lines
+                    if (x1 !== 0 || y1 !== 0 || z1 !== 0 || x2 !== 0 || y2 !== 0 || z2 !== 0) {
+                        vertices.push(x1, y1, z1, x2, y2, z2);
+                        colors.push(0, 0, 0, 0, 0, 0); // Black lines
+                        lineCount++;
+                    }
+                } else if (line === 'CIRCLE') {
+                    // Parse CIRCLE entities
+                    let cx = 0, cy = 0, cz = 0, radius = 0;
+                    for (let j = i + 1; j < Math.min(i + 20, lines.length); j++) {
+                        const code = lines[j].trim();
+                        const value = lines[j + 1] ? parseFloat(lines[j + 1]) : 0;
+                        if (code === '10') cx = value;
+                        else if (code === '20') cy = value;
+                        else if (code === '30') cz = value;
+                        else if (code === '40') radius = value;
+                    }
+                    
+                    if (radius > 0) {
+                        // Create circle using line segments
+                        const segments = 32;
+                        for (let s = 0; s < segments; s++) {
+                            const angle1 = (s / segments) * Math.PI * 2;
+                            const angle2 = ((s + 1) / segments) * Math.PI * 2;
+                            
+                            const x1 = cx + Math.cos(angle1) * radius;
+                            const y1 = cy + Math.sin(angle1) * radius;
+                            const x2 = cx + Math.cos(angle2) * radius;
+                            const y2 = cy + Math.sin(angle2) * radius;
+                            
+                            vertices.push(x1, y1, cz, x2, y2, cz);
+                            colors.push(0, 0, 0, 0, 0, 0);
+                        }
+                        lineCount++;
+                    }
+                } else if (line === 'ARC') {
+                    // Parse ARC entities
+                    let cx = 0, cy = 0, cz = 0, radius = 0, startAngle = 0, endAngle = 0;
+                    for (let j = i + 1; j < Math.min(i + 30, lines.length); j++) {
+                        const code = lines[j].trim();
+                        const value = lines[j + 1] ? parseFloat(lines[j + 1]) : 0;
+                        if (code === '10') cx = value;
+                        else if (code === '20') cy = value;
+                        else if (code === '30') cz = value;
+                        else if (code === '40') radius = value;
+                        else if (code === '50') startAngle = value * Math.PI / 180; // Convert to radians
+                        else if (code === '51') endAngle = value * Math.PI / 180;
+                    }
+                    
+                    if (radius > 0) {
+                        // Create arc using line segments
+                        const segments = Math.max(16, Math.abs(endAngle - startAngle) * 16 / Math.PI);
+                        for (let s = 0; s < segments; s++) {
+                            const angle1 = startAngle + (s / segments) * (endAngle - startAngle);
+                            const angle2 = startAngle + ((s + 1) / segments) * (endAngle - startAngle);
+                            
+                            const x1 = cx + Math.cos(angle1) * radius;
+                            const y1 = cy + Math.sin(angle1) * radius;
+                            const x2 = cx + Math.cos(angle2) * radius;
+                            const y2 = cy + Math.sin(angle2) * radius;
+                            
+                            vertices.push(x1, y1, cz, x2, y2, cz);
+                            colors.push(0, 0, 0, 0, 0, 0);
+                        }
+                        lineCount++;
+                    }
                 }
             }
+
+            console.log('Found', lineCount, 'entities in DXF file');
 
             if (vertices.length > 0) {
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
                 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
                 
-                const material = new THREE.LineBasicMaterial({ vertexColors: true });
+                const material = new THREE.LineBasicMaterial({ 
+                    vertexColors: true,
+                    linewidth: 1
+                });
                 const linesMesh = new THREE.LineSegments(geometry, material);
                 scene.add(linesMesh);
+                
+                console.log('Successfully rendered DXF with', vertices.length / 6, 'line segments');
             } else {
-                // Fallback if no lines found
+                console.log('No geometry found in DXF, showing placeholder');
                 createPlaceholderGeometry(scene, 'DXF', 0xff6600);
             }
         } catch (error) {
@@ -482,52 +567,20 @@
         threejsContainer.style.display = 'block';
     }
 
-    function initDXFViewer(fileUrl) {
-        const container = document.getElementById('threejs-container');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-
-        // Clear previous content
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-
-        try {
-            // Initialize DXF viewer
-            const viewer = new DXFViewer(container, {
-                width: container.offsetWidth,
-                height: container.offsetHeight,
-                backgroundColor: '#f0f0f0'
-            });
-
-            // Load the DXF file
-            fetch(fileUrl)
-                .then(response => response.text())
-                .then(dxfContent => {
-                    viewer.loadDXF(dxfContent);
-                    
-                    // Show the preview
-                    loadingSpinner.style.display = 'none';
-                    previewContent.style.display = 'block';
-                    threejsContainer.style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error loading DXF file:', error);
-                    // Fallback to placeholder
-                    init3DViewer(fileUrl, 'dxf');
-                });
-        } catch (error) {
-            console.error('Error initializing DXF viewer:', error);
-            // Fallback to placeholder
-            init3DViewer(fileUrl, 'dxf');
-        }
-    }
 
     function init3DViewer(fileUrl, fileExtension) {
+        console.log('init3DViewer called with:', fileUrl, fileExtension);
+        
         const container = document.getElementById('threejs-container');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
+
+        console.log('3D viewer elements:', {
+            container: !!container,
+            loadingSpinner: !!loadingSpinner,
+            previewContent: !!previewContent,
+            containerSize: container ? { width: container.offsetWidth, height: container.offsetHeight } : 'N/A'
+        });
 
         // Clear previous scene
         while (container.firstChild) {
@@ -538,6 +591,8 @@
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        console.log('Three.js objects created:', { scene, camera, renderer });
         
         renderer.setSize(container.offsetWidth, container.offsetHeight);
         renderer.setClearColor(0xf0f0f0);
@@ -553,10 +608,13 @@
 
         // Handle different 3D file types
         if (fileExtension === 'stl') {
+            console.log('Processing STL file:', fileUrl);
             // Load actual STL file
             if (window.STLLoader) {
+                console.log('STLLoader is available, loading STL file...');
                 const loader = new THREE.STLLoader();
                 loader.load(fileUrl, function(geometry) {
+                    console.log('STL file loaded successfully, geometry:', geometry);
                     const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
                     const mesh = new THREE.Mesh(geometry, material);
                     
@@ -568,15 +626,19 @@
                     const maxDim = Math.max(size.x, size.y, size.z);
                     const scale = 2 / maxDim;
                     
+                    console.log('STL bounding box:', { center, size, maxDim, scale });
+                    
                     mesh.scale.setScalar(scale);
                     mesh.position.sub(center.multiplyScalar(scale));
                     
                     scene.add(mesh);
+                    console.log('STL mesh added to scene');
                     
                     // Show the preview
                     loadingSpinner.style.display = 'none';
                     previewContent.style.display = 'block';
                     threejsContainer.style.display = 'block';
+                    console.log('STL preview displayed');
                 }, function(progress) {
                     // Loading progress
                     console.log('STL loading progress:', (progress.loaded / progress.total * 100) + '%');
@@ -585,6 +647,7 @@
                     showPreviewError();
                 });
             } else {
+                console.log('STLLoader not available, showing placeholder');
                 // Fallback if STLLoader not available
                 createPlaceholderGeometry(scene, 'STL', 0x00ff00);
             }
