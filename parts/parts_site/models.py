@@ -86,18 +86,29 @@ class PartRevision(models.Model):
 def update_assembly_status(sender, instance, **kwargs):
     assembly = instance.part.assembly
     final_status = PartStatus.NEW
-    for status in PartStatus.values:
-        count = 0
+    
+    # Check each status level from highest to lowest
+    for status in reversed(PartStatus.values):
+        all_parts_at_status = True
+        
+        # Check all parts in this assembly
         for part in assembly.part_set.all():
-            if part.latest_revision and part.latest_revision.status < status:
+            if not part.latest_revision or part.latest_revision.status < status:
+                all_parts_at_status = False
                 break
-            count = count + 1
-        for sub in assembly.sub.all():
-            if sub.status < status:
-                break
-            count = count + 1
-        if count == assembly.part_set.all().count() + assembly.sub.all().count():
+        
+        # Check all sub-assemblies
+        if all_parts_at_status:
+            for sub in assembly.sub.all():
+                if sub.status < status:
+                    all_parts_at_status = False
+                    break
+        
+        # If all parts and sub-assemblies are at this status or higher, this is our final status
+        if all_parts_at_status:
             final_status = status
+            break
+    
     assembly.status = final_status
     assembly.save()
 

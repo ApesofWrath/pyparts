@@ -36,21 +36,32 @@ def mfg_filters(request, project_id, filter):
                     assembly_list.pop(i)
                     break
 
-    parts_list = None
+    parts_list = []
     for assembly in assembly_list:
-        match filter:
-            case "todo":
-                assembly_f = assembly.part_set.all().filter(status__lte = PartStatus.QUALITY_CHECKED.value)
-            case "complete":
-                assembly_f = assembly.part_set.all().filter(status__gt = PartStatus.QUALITY_CHECKED.value)
-            case _:
-                assembly_f = assembly.part_set.all().filter(mfg_type__exact = filter)
-        if parts_list:
-            parts_list = parts_list.union(parts_list, assembly_f)
-        else:
-            parts_list = assembly_f
-
-    parts_list = parts_list.order_by(F("status").desc())
+        parts = assembly.part_set.all()
+        for part in parts:
+            if part.latest_revision:
+                # Add revision info to each part
+                part.current_status = part.latest_revision.status
+                part.current_status_display = part.latest_revision.get_status_display()
+                part.current_mfg_type = part.latest_revision.mfg_type
+                part.current_mfg_type_display = part.latest_revision.get_mfg_type_display()
+                
+                # Apply filters based on latest revision
+                should_include = False
+                match filter:
+                    case "todo":
+                        should_include = part.latest_revision.status <= PartStatus.QUALITY_CHECKED.value
+                    case "complete":
+                        should_include = part.latest_revision.status > PartStatus.QUALITY_CHECKED.value
+                    case _:
+                        should_include = part.latest_revision.mfg_type == filter
+                
+                if should_include:
+                    parts_list.append(part)
+    
+    # Sort by status (descending)
+    parts_list.sort(key=lambda x: x.current_status if x.current_status else 0, reverse=True)
 
     context = {"project": current_project,
                "mfg_types": MfgTypes.choices,
