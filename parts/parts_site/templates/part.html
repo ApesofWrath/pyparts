@@ -383,26 +383,27 @@
     }
 
     function initBasicDXFViewer(dxfContent) {
-        let dxfContainer = document.getElementById('threejs-container');
-        let dxfLoadingSpinner = document.getElementById('loadingSpinner');
-        let dxfPreviewContent = document.getElementById('previewContent');
-        let dxfThreejsContainer = document.getElementById('threejs-container');
+        // Get DOM elements without declaring new variables
+        var container = document.getElementById('threejs-container');
+        var loadingSpinner = document.getElementById('loadingSpinner');
+        var previewContent = document.getElementById('previewContent');
+        var threejsContainer = document.getElementById('threejs-container');
 
         // Clear previous content
-        while (dxfContainer.firstChild) {
-            dxfContainer.removeChild(dxfContainer.firstChild);
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
         }
 
         // Create a basic Three.js scene for DXF
         const scene = new THREE.Scene();
-        const containerWidth = dxfContainer.offsetWidth || 400;
-        const containerHeight = dxfContainer.offsetHeight || 400;
+        const containerWidth = container.offsetWidth || 400;
+        const containerHeight = container.offsetHeight || 400;
         const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         
         renderer.setSize(containerWidth, containerHeight);
         renderer.setClearColor(0xf0f0f0);
-        dxfContainer.appendChild(renderer.domElement);
+        container.appendChild(renderer.domElement);
 
         // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
@@ -537,18 +538,18 @@
         let mouseX = 0, mouseY = 0;
         let isMouseDown = false;
 
-        dxfContainer.addEventListener('mousedown', (event) => {
+        container.addEventListener('mousedown', (event) => {
             isMouseDown = true;
         });
 
-        dxfContainer.addEventListener('mouseup', () => {
+        container.addEventListener('mouseup', () => {
             isMouseDown = false;
         });
 
-        dxfContainer.addEventListener('mousemove', (event) => {
+        container.addEventListener('mousemove', (event) => {
             if (isMouseDown) {
-                mouseX = (event.clientX / dxfContainer.offsetWidth) * 2 - 1;
-                mouseY = -(event.clientY / dxfContainer.offsetHeight) * 2 + 1;
+                mouseX = (event.clientX / container.offsetWidth) * 2 - 1;
+                mouseY = -(event.clientY / container.offsetHeight) * 2 + 1;
                 
                 // Rotate the scene
                 scene.rotation.y = mouseX * Math.PI;
@@ -567,19 +568,19 @@
         window.scene = scene;
 
         // Show the preview - get elements again to ensure they're accessible
-        let dxfLoadingSpinner = document.getElementById('loadingSpinner');
-        let dxfPreviewContent = document.getElementById('previewContent');
-        let dxfThreejsContainer = document.getElementById('threejs-container');
+        var displayLoadingSpinner = document.getElementById('loadingSpinner');
+        var displayPreviewContent = document.getElementById('previewContent');
+        var displayThreejsContainer = document.getElementById('threejs-container');
         
         console.log('DXF display elements:', {
-            loadingSpinner: !!dxfLoadingSpinner,
-            previewContent: !!dxfPreviewContent,
-            threejsContainer: !!dxfThreejsContainer
+            loadingSpinner: !!displayLoadingSpinner,
+            previewContent: !!displayPreviewContent,
+            threejsContainer: !!displayThreejsContainer
         });
         
-        if (dxfLoadingSpinner) dxfLoadingSpinner.style.display = 'none';
-        if (dxfPreviewContent) dxfPreviewContent.style.display = 'block';
-        if (dxfThreejsContainer) dxfThreejsContainer.style.display = 'block';
+        if (displayLoadingSpinner) displayLoadingSpinner.style.display = 'none';
+        if (displayPreviewContent) displayPreviewContent.style.display = 'block';
+        if (displayThreejsContainer) displayThreejsContainer.style.display = 'block';
         
         console.log('DXF preview display completed');
     }
