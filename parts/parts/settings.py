@@ -143,7 +143,30 @@ WSGI_APPLICATION = 'parts.wsgi.application'
 
 # Database
 # Use django-environ to parse the connection string
-DATABASES = {"default": env.db(default='sqlite:///db.sqlite3')}
+try:
+    DATABASES = {"default": env.db()}
+except Exception as e:
+    print(f"Error parsing DATABASE_URL: {e}")
+    print(f"DATABASE_URL value: {os.environ.get('DATABASE_URL', 'Not set')}")
+    # Fallback to individual environment variables or SQLite
+    if all(os.environ.get(key) for key in ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_HOST']):
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ.get('POSTGRES_DB'),
+                "USER": os.environ.get('POSTGRES_USER'),
+                "PASSWORD": os.environ.get('POSTGRES_PASSWORD'),
+                "HOST": os.environ.get('POSTGRES_HOST'),
+                "PORT": os.environ.get('POSTGRES_PORT', '5432'),
+            }
+        }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
 
 
 
