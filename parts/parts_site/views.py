@@ -205,11 +205,17 @@ def project(request, project_id):
                 part.current_status_display = part.latest_revision.get_status_display()
                 part.current_mfg_type = part.latest_revision.mfg_type
                 part.current_mfg_type_display = part.latest_revision.get_mfg_type_display()
+                part.current_material = part.latest_revision.material
+                part.current_quantity = part.latest_revision.quantity
+                part.current_drawing = part.latest_revision.drawing
             else:
                 part.current_status = None
                 part.current_status_display = "No revisions"
                 part.current_mfg_type = None
                 part.current_mfg_type_display = "Not specified"
+                part.current_material = None
+                part.current_quantity = None
+                part.current_drawing = None
             parts_list.append(part)
 
     context = {"project": current_project,
@@ -232,11 +238,17 @@ def assembly_view(request, project_id, assembly_id):
             part.current_status_display = part.latest_revision.get_status_display()
             part.current_mfg_type = part.latest_revision.mfg_type
             part.current_mfg_type_display = part.latest_revision.get_mfg_type_display()
+            part.current_material = part.latest_revision.material
+            part.current_quantity = part.latest_revision.quantity
+            part.current_drawing = part.latest_revision.drawing
         else:
             part.current_status = None
             part.current_status_display = "No revisions"
             part.current_mfg_type = None
             part.current_mfg_type_display = "Not specified"
+            part.current_material = None
+            part.current_quantity = None
+            part.current_drawing = None
         parts_list.append(part)
 
     context = {"project": current_project,

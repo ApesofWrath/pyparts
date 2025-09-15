@@ -46,6 +46,9 @@ def mfg_filters(request, project_id, filter):
                 part.current_status_display = part.latest_revision.get_status_display()
                 part.current_mfg_type = part.latest_revision.mfg_type
                 part.current_mfg_type_display = part.latest_revision.get_mfg_type_display()
+                part.current_material = part.latest_revision.material
+                part.current_quantity = part.latest_revision.quantity
+                part.current_drawing = part.latest_revision.drawing
                 
                 # Apply filters based on latest revision
                 should_include = False

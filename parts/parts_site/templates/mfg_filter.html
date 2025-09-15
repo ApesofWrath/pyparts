@@ -27,12 +27,12 @@
                 <td><a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}">{{ part.part_number }}</a></td>
                 <td>{{ part.name }}</td>
                 <td>
-                    <span class="label label-status-{{ part.status }}">{{ part.get_status_display }}</span>
+                    <span class="label label-status-{{ part.current_status }}">{{ part.current_status_display }}</span>
                 </td>
-                <td>{{ part.material }}</td>
-                <td>{{ part.quantity }}</td>
-                <td>{{ part.get_mfg_type_display }}</td>
-                <td>{% if part.drawing %}<a href="{{ part.drawing.url }}">Download</a>{% endif %}</td>
+                <td>{{ part.current_material|default:"Not specified" }}</td>
+                <td>{{ part.current_quantity|default:"Not specified" }}</td>
+                <td>{{ part.current_mfg_type_display }}</td>
+                <td>{% if part.current_drawing %}<a href="{{ part.current_drawing.url }}">Download</a>{% else %}No drawing{% endif %}</td>
                 <td>
                     <a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}/edit/"
                         class="btn btn-primary btn-small">
