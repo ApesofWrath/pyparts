@@ -29,7 +29,7 @@ COPY . /app/
 RUN mkdir -p /app/static /app/parts_site/static
 
 # Create staticfiles directory
-RUN mkdir -p /app/static
+RUN mkdir -p /app/staticfiles
 
 # Set a temporary SECRET_KEY for build-time operations
 ENV SECRET_KEY=temp-secret-key-for-build
