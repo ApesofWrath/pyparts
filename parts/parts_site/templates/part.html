@@ -239,13 +239,13 @@
         scene.add(textMesh);
         
         // Show the preview - get elements again to ensure they're accessible
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let threejsContainer = document.getElementById('threejs-container');
+        let placeholderLoadingSpinner = document.getElementById('loadingSpinner');
+        let placeholderPreviewContent = document.getElementById('previewContent');
+        let placeholderThreejsContainer = document.getElementById('threejs-container');
         
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (previewContent) previewContent.style.display = 'block';
-        if (threejsContainer) threejsContainer.style.display = 'block';
+        if (placeholderLoadingSpinner) placeholderLoadingSpinner.style.display = 'none';
+        if (placeholderPreviewContent) placeholderPreviewContent.style.display = 'block';
+        if (placeholderThreejsContainer) placeholderThreejsContainer.style.display = 'block';
     }
 
     function showDWGPlaceholder(fileUrl) {
@@ -383,24 +383,26 @@
     }
 
     function initBasicDXFViewer(dxfContent) {
-        let container = document.getElementById('threejs-container');
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let threejsContainer = document.getElementById('threejs-container');
+        let dxfContainer = document.getElementById('threejs-container');
+        let dxfLoadingSpinner = document.getElementById('loadingSpinner');
+        let dxfPreviewContent = document.getElementById('previewContent');
+        let dxfThreejsContainer = document.getElementById('threejs-container');
 
         // Clear previous content
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
+        while (dxfContainer.firstChild) {
+            dxfContainer.removeChild(dxfContainer.firstChild);
         }
 
         // Create a basic Three.js scene for DXF
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+        const containerWidth = dxfContainer.offsetWidth || 400;
+        const containerHeight = dxfContainer.offsetHeight || 400;
+        const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         
-        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        renderer.setSize(containerWidth, containerHeight);
         renderer.setClearColor(0xf0f0f0);
-        container.appendChild(renderer.domElement);
+        dxfContainer.appendChild(renderer.domElement);
 
         // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
@@ -535,18 +537,18 @@
         let mouseX = 0, mouseY = 0;
         let isMouseDown = false;
 
-        container.addEventListener('mousedown', (event) => {
+        dxfContainer.addEventListener('mousedown', (event) => {
             isMouseDown = true;
         });
 
-        container.addEventListener('mouseup', () => {
+        dxfContainer.addEventListener('mouseup', () => {
             isMouseDown = false;
         });
 
-        container.addEventListener('mousemove', (event) => {
+        dxfContainer.addEventListener('mousemove', (event) => {
             if (isMouseDown) {
-                mouseX = (event.clientX / container.offsetWidth) * 2 - 1;
-                mouseY = -(event.clientY / container.offsetHeight) * 2 + 1;
+                mouseX = (event.clientX / dxfContainer.offsetWidth) * 2 - 1;
+                mouseY = -(event.clientY / dxfContainer.offsetHeight) * 2 + 1;
                 
                 // Rotate the scene
                 scene.rotation.y = mouseX * Math.PI;
@@ -565,19 +567,19 @@
         window.scene = scene;
 
         // Show the preview - get elements again to ensure they're accessible
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let threejsContainer = document.getElementById('threejs-container');
+        let dxfLoadingSpinner = document.getElementById('loadingSpinner');
+        let dxfPreviewContent = document.getElementById('previewContent');
+        let dxfThreejsContainer = document.getElementById('threejs-container');
         
         console.log('DXF display elements:', {
-            loadingSpinner: !!loadingSpinner,
-            previewContent: !!previewContent,
-            threejsContainer: !!threejsContainer
+            loadingSpinner: !!dxfLoadingSpinner,
+            previewContent: !!dxfPreviewContent,
+            threejsContainer: !!dxfThreejsContainer
         });
         
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (previewContent) previewContent.style.display = 'block';
-        if (threejsContainer) threejsContainer.style.display = 'block';
+        if (dxfLoadingSpinner) dxfLoadingSpinner.style.display = 'none';
+        if (dxfPreviewContent) dxfPreviewContent.style.display = 'block';
+        if (dxfThreejsContainer) dxfThreejsContainer.style.display = 'block';
         
         console.log('DXF preview display completed');
     }
@@ -659,13 +661,13 @@
                     console.log('STL mesh added to scene');
                     
                             // Show the preview - get elements again to ensure they're accessible
-                            let loadingSpinner = document.getElementById('loadingSpinner');
-                            let previewContent = document.getElementById('previewContent');
-                            let threejsContainer = document.getElementById('threejs-container');
+                            let stlLoadingSpinner = document.getElementById('loadingSpinner');
+                            let stlPreviewContent = document.getElementById('previewContent');
+                            let stlThreejsContainer = document.getElementById('threejs-container');
                     
-                    if (loadingSpinner) loadingSpinner.style.display = 'none';
-                    if (previewContent) previewContent.style.display = 'block';
-                    if (threejsContainer) threejsContainer.style.display = 'block';
+                    if (stlLoadingSpinner) stlLoadingSpinner.style.display = 'none';
+                    if (stlPreviewContent) stlPreviewContent.style.display = 'block';
+                    if (stlThreejsContainer) stlThreejsContainer.style.display = 'block';
                     console.log('STL preview displayed');
                 }, function(progress) {
                     // Loading progress
