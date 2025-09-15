@@ -2,7 +2,7 @@ version: 2
 updates:
   # Python dependencies
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/parts"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -34,7 +34,7 @@ updates:
 
   # Docker
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/parts"
     schedule:
       interval: "weekly"
       day: "monday"
