@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from storages.backends.gcloud import GoogleCloudStorage
 
 from django_slack import slack_message
 
@@ -59,7 +58,7 @@ class Part(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     status = models.PositiveSmallIntegerField(choices=PartStatus, default=PartStatus.NEW)
-    drawing = models.FileField(upload_to=("uploads/%Y/%m/%d"), storage=GoogleCloudStorage(), null=True, blank=True)
+    drawing = models.FileField(upload_to="uploads/%Y/%m/%d", null=True, blank=True)
     material = models.CharField(max_length=200, null=True, blank=True)
     quantity = models.IntegerField(null=True, blank=True)
     mfg_type = models.CharField(max_length=200, choices=MfgTypes, null=True, blank=True)
