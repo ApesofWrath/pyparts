@@ -238,14 +238,14 @@
         textMesh.position.set(0, 0, 0.6);
         scene.add(textMesh);
         
-        // Show the preview
+        // Show the preview - get elements again to ensure they're accessible
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const threejsContainer = document.getElementById('threejs-container');
         
-        loadingSpinner.style.display = 'none';
-        previewContent.style.display = 'block';
-        threejsContainer.style.display = 'block';
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        if (threejsContainer) threejsContainer.style.display = 'block';
     }
 
     function showDWGPlaceholder(fileUrl) {
@@ -564,10 +564,22 @@
         // Store scene reference for cleanup
         window.scene = scene;
 
-        // Show the preview
-        loadingSpinner.style.display = 'none';
-        previewContent.style.display = 'block';
-        threejsContainer.style.display = 'block';
+        // Show the preview - get elements again to ensure they're accessible
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        console.log('DXF display elements:', {
+            loadingSpinner: !!loadingSpinner,
+            previewContent: !!previewContent,
+            threejsContainer: !!threejsContainer
+        });
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        if (threejsContainer) threejsContainer.style.display = 'block';
+        
+        console.log('DXF preview display completed');
     }
 
 
