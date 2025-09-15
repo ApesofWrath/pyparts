@@ -149,6 +149,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Loading preview for:', '{{ revision.drawing.name }}');
         
+        // Add a small delay to ensure container is properly sized
+        setTimeout(function() {
+            loadPreview('{{ revision.drawing.url }}', '{{ revision.drawing.name }}');
+        }, 100);
+        
         // Add a timeout to show something if preview fails
         setTimeout(function() {
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -157,8 +162,6 @@
                 showPreviewError();
             }
         }, 10000); // 10 second timeout
-        
-        loadPreview('{{ revision.drawing.url }}', '{{ revision.drawing.name }}');
     });
     {% endif %}
 
@@ -589,14 +592,22 @@
 
         // Create scene
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+        const containerWidth = container.offsetWidth || 400;
+        const containerHeight = container.offsetHeight || 400;
+        const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         
         console.log('Three.js objects created:', { scene, camera, renderer });
         
-        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        console.log('Setting renderer size to:', containerWidth, 'x', containerHeight);
+        
+        renderer.setSize(containerWidth, containerHeight);
         renderer.setClearColor(0xf0f0f0);
         container.appendChild(renderer.domElement);
+        
+        // Update camera aspect ratio
+        camera.aspect = containerWidth / containerHeight;
+        camera.updateProjectionMatrix();
 
         // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
@@ -609,8 +620,9 @@
         // Handle different 3D file types
         if (fileExtension === 'stl') {
             console.log('Processing STL file:', fileUrl);
+            console.log('STLLoader available check:', !!window.STLLoader, 'THREE.STLLoader:', !!THREE.STLLoader);
             // Load actual STL file
-            if (window.STLLoader) {
+            if (window.STLLoader || THREE.STLLoader) {
                 console.log('STLLoader is available, loading STL file...');
                 const loader = new THREE.STLLoader();
                 loader.load(fileUrl, function(geometry) {
