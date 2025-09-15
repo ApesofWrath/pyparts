@@ -646,10 +646,14 @@
                     scene.add(mesh);
                     console.log('STL mesh added to scene');
                     
-                    // Show the preview
-                    loadingSpinner.style.display = 'none';
-                    previewContent.style.display = 'block';
-                    threejsContainer.style.display = 'block';
+                    // Show the preview - get elements again to ensure they're accessible
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    const previewContent = document.getElementById('previewContent');
+                    const threejsContainer = document.getElementById('threejs-container');
+                    
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                    if (previewContent) previewContent.style.display = 'block';
+                    if (threejsContainer) threejsContainer.style.display = 'block';
                     console.log('STL preview displayed');
                 }, function(progress) {
                     // Loading progress
