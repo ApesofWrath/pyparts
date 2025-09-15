@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from . import views, mfg_views, order_views, debug_views
+from . import views, mfg_views, order_views
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -38,11 +38,4 @@ urlpatterns = [
     path("orders/<int:order_id>/edit/", order_views.editorder, name="editorder"),
     path("orders/<int:order_id>/item/<int:item_id>/delete", order_views.delete, name="deleteitem"),
     path("orders/newitem/", order_views.newitem, name="newitem"),
-    
-    # Debug endpoints
-    path("debug/upload/", debug_views.debug_upload_page, name="debug_upload"),
-    path("debug/media/", debug_views.debug_media_page, name="debug_media"),
-    path("debug/test-upload/", debug_views.test_file_upload, name="test_upload"),
-    path("debug/media-access/", debug_views.test_media_access, name="test_media_access"),
-    path("debug/media-file/<path:file_path>", debug_views.test_media_file, name="test_media_file"),
 ]

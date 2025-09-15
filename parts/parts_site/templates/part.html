@@ -69,7 +69,7 @@
         <tr><td><b>Source material</b></td><td>{{ revision.material|default:"Not specified" }}</td></tr>
         <tr><td><b>Quantity required</b></td><td>{{ revision.quantity|default:"Not specified" }}</td></tr>
         <tr><td><b>Manufacturing method</b></td><td>{{ revision.get_mfg_type_display|default:"Not specified" }}</td></tr>
-        <tr><td><b>Drawing</b></td><td>{% if revision.drawing %}<a href="{{ revision.drawing.url }}">Download</a> ({{ revision.drawing.url }}){% else %}No drawing{% endif %}</td></tr>
+        <tr><td><b>Drawing</b></td><td>{% if revision.drawing %}<a href="{{ revision.drawing.url }}">Download</a>{% else %}No drawing{% endif %}</td></tr>
         <tr><td><b>Created</b></td><td>{{ revision.created_at|date:"M d, Y H:i" }}</td></tr>
         <tr><td><b>Updated</b></td><td>{{ revision.updated_at|date:"M d, Y H:i" }}</td></tr>
         {% if revision.notes %}
