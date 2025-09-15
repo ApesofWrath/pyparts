@@ -171,26 +171,329 @@
         const fileExtension = fileName.split('.').pop().toLowerCase();
         
         // Determine preview type and load accordingly
-        if (['stl', 'step', 'stp', 'iges'].includes(fileExtension)) {
+        if (['stl', 'step', 'stp', 'iges', 'dxf'].includes(fileExtension)) {
             load3DPreview(fileUrl, fileExtension);
         } else if (['pdf'].includes(fileExtension)) {
             loadPDFPreview(fileUrl);
         } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(fileExtension)) {
             loadImagePreview(fileUrl);
+        } else if (['dwg'].includes(fileExtension)) {
+            // DWG files - show placeholder with download option
+            showDWGPlaceholder(fileUrl);
         } else {
             showPreviewError();
         }
     }
 
+    function createPlaceholderGeometry(scene, fileType, color) {
+        // Create a placeholder geometry with text
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshLambertMaterial({ color: color });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+        
+        // Add text indicating the file type
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 64;
+        context.fillStyle = '#000000';
+        context.font = '16px Arial';
+        context.fillText(fileType + ' Preview', 10, 35);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        const textMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+        const textGeometry = new THREE.PlaneGeometry(2, 0.5);
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        textMesh.position.set(0, 0, 0.6);
+        scene.add(textMesh);
+        
+        // Show the preview
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        loadingSpinner.style.display = 'none';
+        previewContent.style.display = 'block';
+        threejsContainer.style.display = 'block';
+    }
+
+    function showDWGPlaceholder(fileUrl) {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const imageContainer = document.getElementById('image-container');
+        
+        // Create a placeholder for DWG files
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.style.cssText = 'width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;';
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.9;';
+        iconDiv.innerHTML = '🏗️';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px;';
+        titleDiv.textContent = 'DWG File';
+        
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; opacity: 0.9; line-height: 1.4;';
+        descDiv.innerHTML = 'DWG files require AutoCAD or compatible software.<br/>Try converting to DXF for web preview.';
+        
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
+        
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = fileUrl;
+        downloadBtn.target = '_blank';
+        downloadBtn.className = 'btn btn-light btn-sm';
+        downloadBtn.style.cssText = 'color: #667eea; font-weight: bold;';
+        downloadBtn.innerHTML = '<i class="icon-download"></i> Download DWG';
+        
+        const convertBtn = document.createElement('button');
+        convertBtn.className = 'btn btn-outline-light btn-sm';
+        convertBtn.style.cssText = 'border: 2px solid white; color: white; font-weight: bold;';
+        convertBtn.innerHTML = '<i class="icon-refresh"></i> Convert to DXF';
+        convertBtn.onclick = () => showConversionInfo();
+        
+        buttonContainer.appendChild(downloadBtn);
+        buttonContainer.appendChild(convertBtn);
+        
+        placeholderDiv.appendChild(iconDiv);
+        placeholderDiv.appendChild(titleDiv);
+        placeholderDiv.appendChild(descDiv);
+        placeholderDiv.appendChild(buttonContainer);
+        
+        imageContainer.innerHTML = '';
+        imageContainer.appendChild(placeholderDiv);
+        
+        loadingSpinner.style.display = 'none';
+        previewContent.style.display = 'block';
+        imageContainer.style.display = 'block';
+    }
+
+    function showConversionInfo() {
+        alert('To convert DWG to DXF:\n\n' +
+              '1. Open the DWG file in AutoCAD\n' +
+              '2. Go to File > Save As\n' +
+              '3. Change file type to "AutoCAD DXF (*.dxf)"\n' +
+              '4. Save and upload the DXF file for web preview\n\n' +
+              'Alternatively, use online converters like:\n' +
+              '• Convertio.co\n' +
+              '• CloudConvert.com\n' +
+              '• Zamzar.com');
+    }
+
     function load3DPreview(fileUrl, fileExtension) {
-        // Load Three.js dynamically
+        // Load Three.js and STLLoader dynamically
         if (!window.THREE) {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-            script.onload = () => init3DViewer(fileUrl, fileExtension);
-            document.head.appendChild(script);
+            const threeScript = document.createElement('script');
+            threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+            threeScript.onload = () => loadSTLLoader(fileUrl, fileExtension);
+            document.head.appendChild(threeScript);
+        } else {
+            loadSTLLoader(fileUrl, fileExtension);
+        }
+    }
+
+    function loadSTLLoader(fileUrl, fileExtension) {
+        // Load STLLoader for STL files
+        if (fileExtension === 'stl' && !window.STLLoader) {
+            const stlScript = document.createElement('script');
+            stlScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js';
+            stlScript.onload = () => init3DViewer(fileUrl, fileExtension);
+            document.head.appendChild(stlScript);
+        } else if (fileExtension === 'dxf' && !window.DXFViewer) {
+            // Load DXF viewer library
+            loadDXFViewer(fileUrl);
         } else {
             init3DViewer(fileUrl, fileExtension);
+        }
+    }
+
+    function loadDXFViewer(fileUrl) {
+        // Try to load dxf-viewer library from CDN
+        const dxfScript = document.createElement('script');
+        dxfScript.src = 'https://unpkg.com/dxf-viewer@latest/dist/dxf-viewer.min.js';
+        dxfScript.onload = () => initDXFViewer(fileUrl);
+        dxfScript.onerror = () => {
+            console.warn('dxf-viewer library not available, trying alternative approach');
+            loadDXFAlternative(fileUrl);
+        };
+        document.head.appendChild(dxfScript);
+    }
+
+    function loadDXFAlternative(fileUrl) {
+        // Alternative DXF handling - try to parse basic DXF content
+        fetch(fileUrl)
+            .then(response => response.text())
+            .then(dxfContent => {
+                try {
+                    initBasicDXFViewer(dxfContent);
+                } catch (error) {
+                    console.error('Error parsing DXF:', error);
+                    init3DViewer(fileUrl, 'dxf');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading DXF file:', error);
+                init3DViewer(fileUrl, 'dxf');
+            });
+    }
+
+    function initBasicDXFViewer(dxfContent) {
+        const container = document.getElementById('threejs-container');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+
+        // Clear previous content
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        // Create a basic Three.js scene for DXF
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        renderer.setClearColor(0xf0f0f0);
+        container.appendChild(renderer.domElement);
+
+        // Add lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // Parse basic DXF content and create geometry
+        try {
+            const lines = dxfContent.split('\n');
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const colors = [];
+
+            // Simple DXF parsing for basic shapes
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line === 'LINE') {
+                    // Look for LINE entities
+                    let x1 = 0, y1 = 0, z1 = 0, x2 = 0, y2 = 0, z2 = 0;
+                    for (let j = i + 1; j < Math.min(i + 20, lines.length); j++) {
+                        const code = lines[j].trim();
+                        const value = lines[j + 1] ? parseFloat(lines[j + 1]) : 0;
+                        if (code === '10') x1 = value;
+                        else if (code === '20') y1 = value;
+                        else if (code === '30') z1 = value;
+                        else if (code === '11') x2 = value;
+                        else if (code === '21') y2 = value;
+                        else if (code === '31') z2 = value;
+                    }
+                    
+                    // Add line vertices
+                    vertices.push(x1, y1, z1, x2, y2, z2);
+                    colors.push(0, 0, 0, 0, 0, 0); // Black lines
+                }
+            }
+
+            if (vertices.length > 0) {
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+                
+                const material = new THREE.LineBasicMaterial({ vertexColors: true });
+                const linesMesh = new THREE.LineSegments(geometry, material);
+                scene.add(linesMesh);
+            } else {
+                // Fallback if no lines found
+                createPlaceholderGeometry(scene, 'DXF', 0xff6600);
+            }
+        } catch (error) {
+            console.error('Error parsing DXF:', error);
+            createPlaceholderGeometry(scene, 'DXF', 0xff6600);
+        }
+
+        camera.position.z = 5;
+
+        // Add controls for rotation
+        let mouseX = 0, mouseY = 0;
+        let isMouseDown = false;
+
+        container.addEventListener('mousedown', (event) => {
+            isMouseDown = true;
+        });
+
+        container.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        container.addEventListener('mousemove', (event) => {
+            if (isMouseDown) {
+                mouseX = (event.clientX / container.offsetWidth) * 2 - 1;
+                mouseY = -(event.clientY / container.offsetHeight) * 2 + 1;
+                
+                // Rotate the scene
+                scene.rotation.y = mouseX * Math.PI;
+                scene.rotation.x = mouseY * Math.PI;
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Store scene reference for cleanup
+        window.scene = scene;
+
+        // Show the preview
+        loadingSpinner.style.display = 'none';
+        previewContent.style.display = 'block';
+        threejsContainer.style.display = 'block';
+    }
+
+    function initDXFViewer(fileUrl) {
+        const container = document.getElementById('threejs-container');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+
+        // Clear previous content
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        try {
+            // Initialize DXF viewer
+            const viewer = new DXFViewer(container, {
+                width: container.offsetWidth,
+                height: container.offsetHeight,
+                backgroundColor: '#f0f0f0'
+            });
+
+            // Load the DXF file
+            fetch(fileUrl)
+                .then(response => response.text())
+                .then(dxfContent => {
+                    viewer.loadDXF(dxfContent);
+                    
+                    // Show the preview
+                    loadingSpinner.style.display = 'none';
+                    previewContent.style.display = 'block';
+                    threejsContainer.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading DXF file:', error);
+                    // Fallback to placeholder
+                    init3DViewer(fileUrl, 'dxf');
+                });
+        } catch (error) {
+            console.error('Error initializing DXF viewer:', error);
+            // Fallback to placeholder
+            init3DViewer(fileUrl, 'dxf');
         }
     }
 
@@ -221,36 +524,52 @@
         directionalLight.position.set(1, 1, 1);
         scene.add(directionalLight);
 
-        // For STL files, we'll create a simple placeholder since we can't load STL directly in browser
-        // In a real implementation, you'd use a library like three-stl-loader
+        // Handle different 3D file types
         if (fileExtension === 'stl') {
-            // Create a placeholder geometry for STL files
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-            const cube = new THREE.Mesh(geometry, material);
-            scene.add(cube);
-            
-            // Add text indicating this is a placeholder
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 256;
-            canvas.height = 64;
-            context.fillStyle = '#000000';
-            context.font = '16px Arial';
-            context.fillText('STL Preview (Placeholder)', 10, 35);
-            
-            const texture = new THREE.CanvasTexture(canvas);
-            const textMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-            const textGeometry = new THREE.PlaneGeometry(2, 0.5);
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            textMesh.position.set(0, 0, 0.6);
-            scene.add(textMesh);
+            // Load actual STL file
+            if (window.STLLoader) {
+                const loader = new THREE.STLLoader();
+                loader.load(fileUrl, function(geometry) {
+                    const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Center and scale the model
+                    geometry.computeBoundingBox();
+                    const boundingBox = geometry.boundingBox;
+                    const center = boundingBox.getCenter(new THREE.Vector3());
+                    const size = boundingBox.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2 / maxDim;
+                    
+                    mesh.scale.setScalar(scale);
+                    mesh.position.sub(center.multiplyScalar(scale));
+                    
+                    scene.add(mesh);
+                    
+                    // Show the preview
+                    loadingSpinner.style.display = 'none';
+                    previewContent.style.display = 'block';
+                    threejsContainer.style.display = 'block';
+                }, function(progress) {
+                    // Loading progress
+                    console.log('STL loading progress:', (progress.loaded / progress.total * 100) + '%');
+                }, function(error) {
+                    console.error('STL loading error:', error);
+                    showPreviewError();
+                });
+            } else {
+                // Fallback if STLLoader not available
+                createPlaceholderGeometry(scene, 'STL', 0x00ff00);
+            }
+        } else if (fileExtension === 'dxf') {
+            // DXF files - this should be handled by DXF viewer, but fallback to placeholder
+            createPlaceholderGeometry(scene, 'DXF', 0xff6600);
+        } else if (['step', 'stp', 'iges'].includes(fileExtension)) {
+            // Other 3D formats - show placeholder
+            createPlaceholderGeometry(scene, fileExtension.toUpperCase(), 0x0066cc);
         } else {
-            // For other 3D formats, show a placeholder
-            const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-            const material = new THREE.MeshLambertMaterial({ color: 0x0066cc });
-            const sphere = new THREE.Mesh(geometry, material);
-            scene.add(sphere);
+            // Default placeholder
+            createPlaceholderGeometry(scene, '3D', 0x666666);
         }
 
         camera.position.z = 3;
@@ -293,10 +612,13 @@
         // Store scene reference for cleanup
         window.scene = scene;
 
-        // Show the preview
-        loadingSpinner.style.display = 'none';
-        previewContent.style.display = 'block';
-        threejsContainer.style.display = 'block';
+        // For non-STL files, show the preview immediately
+        if (fileExtension !== 'stl') {
+            // Show the preview
+            loadingSpinner.style.display = 'none';
+            previewContent.style.display = 'block';
+            threejsContainer.style.display = 'block';
+        }
     }
 
     function loadPDFPreview(fileUrl) {
