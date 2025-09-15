@@ -398,15 +398,7 @@
         const scene = new THREE.Scene();
         const containerWidth = container.offsetWidth || 400;
         const containerHeight = container.offsetHeight || 400;
-        
-        // Create orthographic camera for 2D drawings
-        const aspect = containerWidth / containerHeight;
-        const frustumSize = 10; // Will be updated after geometry is loaded
-        const camera = new THREE.OrthographicCamera(
-            -frustumSize * aspect / 2, frustumSize * aspect / 2,
-            frustumSize / 2, -frustumSize / 2,
-            0.1, 1000
-        );
+        const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         
         renderer.setSize(containerWidth, containerHeight);
@@ -531,45 +523,6 @@
                         scene.add(linesMesh);
                         
                         console.log('Successfully rendered DXF with', vertices.length / 6, 'line segments');
-                        
-                        // Position camera based on the geometry
-                        let minX = Infinity, maxX = -Infinity;
-                        let minY = Infinity, maxY = -Infinity;
-                        let minZ = Infinity, maxZ = -Infinity;
-                        
-                        for (let i = 0; i < vertices.length; i += 3) {
-                            minX = Math.min(minX, vertices[i]);
-                            maxX = Math.max(maxX, vertices[i]);
-                            minY = Math.min(minY, vertices[i + 1]);
-                            maxY = Math.max(maxY, vertices[i + 1]);
-                            minZ = Math.min(minZ, vertices[i + 2]);
-                            maxZ = Math.max(maxZ, vertices[i + 2]);
-                        }
-                        
-                        const centerX = (minX + maxX) / 2;
-                        const centerY = (minY + maxY) / 2;
-                        const centerZ = (minZ + maxZ) / 2;
-                        const sizeX = maxX - minX;
-                        const sizeY = maxY - minY;
-                        const sizeZ = maxZ - minZ;
-                        const maxSize = Math.max(sizeX, sizeY, sizeZ);
-                        
-                        console.log('DXF bounding box:', { minX, maxX, minY, maxY, minZ, maxZ, maxSize });
-                        
-                        // Position camera for 2D view (orthographic projection)
-                        const distance = Math.max(maxSize * 1.2, 10); // Closer view
-                        
-                        // Update orthographic camera frustum based on geometry size
-                        const aspect = containerWidth / containerHeight;
-                        const frustumSize = maxSize * 1.5;
-                        
-                        camera.left = -frustumSize * aspect / 2;
-                        camera.right = frustumSize * aspect / 2;
-                        camera.top = frustumSize / 2;
-                        camera.bottom = -frustumSize / 2;
-                        camera.position.set(centerX, centerY, centerZ + distance);
-                        camera.lookAt(centerX, centerY, centerZ);
-                        camera.updateProjectionMatrix();
                     } else {
                         console.log('No geometry found in DXF, showing placeholder');
                         createPlaceholderGeometry(scene, 'DXF', 0xff6600);
@@ -579,66 +532,8 @@
             createPlaceholderGeometry(scene, 'DXF', 0xff6600);
         }
 
-        // Position camera - will be set after geometry is created
-        camera.position.z = 1;
-
-        // Add 2D pan and zoom controls for DXF drawings
-        let isPanning = false;
-        let lastMouseX = 0, lastMouseY = 0;
-        let panX = 0, panY = 0;
-        let zoomLevel = 1;
-
-        container.addEventListener('mousedown', (event) => {
-            isPanning = true;
-            lastMouseX = event.clientX;
-            lastMouseY = event.clientY;
-        });
-
-        container.addEventListener('mouseup', () => {
-            isPanning = false;
-        });
-
-        container.addEventListener('mousemove', (event) => {
-            if (isPanning) {
-                const deltaX = event.clientX - lastMouseX;
-                const deltaY = event.clientY - lastMouseY;
-                
-                // Pan the view
-                panX += deltaX * 0.01;
-                panY -= deltaY * 0.01;
-                
-                // Update camera position for panning
-                if (camera.isOrthographicCamera) {
-                    camera.position.x += deltaX * 0.01;
-                    camera.position.y += deltaY * 0.01;
-                }
-                
-                lastMouseX = event.clientX;
-                lastMouseY = event.clientY;
-            }
-        });
-
-        // Add zoom controls with mouse wheel
-        container.addEventListener('wheel', (event) => {
-            event.preventDefault();
-            const zoomSpeed = 0.1;
-            const delta = event.deltaY > 0 ? 1 + zoomSpeed : 1 - zoomSpeed;
-            
-            zoomLevel *= delta;
-            zoomLevel = Math.max(0.1, Math.min(10, zoomLevel));
-            
-            // Update orthographic camera zoom
-            if (camera.isOrthographicCamera) {
-                const frustumSize = camera.top / zoomLevel;
-                camera.left = -frustumSize * (containerWidth / containerHeight);
-                camera.right = frustumSize * (containerWidth / containerHeight);
-                camera.top = frustumSize;
-                camera.bottom = -frustumSize;
-                camera.updateProjectionMatrix();
-            }
-            
-            console.log('Zoom level:', zoomLevel);
-        });
+        // Simple camera position for DXF display
+        camera.position.z = 5;
 
         // Animation loop
         function animate() {
@@ -670,7 +565,7 @@
         // Add instructions for user
         const instructions = document.createElement('div');
         instructions.style.cssText = 'position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 8px; border-radius: 4px; font-size: 12px; z-index: 1000;';
-        instructions.innerHTML = 'Mouse: Drag to pan | Wheel: Zoom in/out';
+        instructions.innerHTML = 'DXF Drawing - Original Projection';
         container.appendChild(instructions);
     }
 
