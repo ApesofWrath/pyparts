@@ -25,6 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app/
 
+# Ensure static directories exist
+RUN mkdir -p /app/static /app/parts_site/static
+
 # Create staticfiles directory
 RUN mkdir -p /app/static
 

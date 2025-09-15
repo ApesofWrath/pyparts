@@ -24,7 +24,6 @@ services:
              python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8000 --workers 3 parts.wsgi:application"
     volumes:
-      - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
     ports:
