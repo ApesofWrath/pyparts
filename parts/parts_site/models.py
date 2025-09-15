@@ -82,45 +82,6 @@ class PartRevision(models.Model):
     def __str__(self):
         return f"{self.part.name} - Rev {self.revision_number}"
 
-@receiver(post_save,sender=PartRevision)
-def update_assembly_status(sender, instance, **kwargs):
-    assembly = instance.part.assembly
-    final_status = PartStatus.NEW
-    
-    # Check each status level from highest to lowest
-    for status in reversed(PartStatus.values):
-        all_parts_at_status = True
-        
-        # Check all parts in this assembly
-        for part in assembly.part_set.all():
-            if not part.latest_revision or part.latest_revision.status < status:
-                all_parts_at_status = False
-                break
-        
-        # Check all sub-assemblies
-        if all_parts_at_status:
-            for sub in assembly.sub.all():
-                if sub.status < status:
-                    all_parts_at_status = False
-                    break
-        
-        # If all parts and sub-assemblies are at this status or higher, this is our final status
-        if all_parts_at_status:
-            final_status = status
-            break
-    
-    assembly.status = final_status
-    assembly.save()
-
-@receiver(post_save,sender=PartRevision)
-def update_part_latest_revision(sender, instance, **kwargs):
-    # Update the part's latest_revision to point to the highest revision letter
-    part = instance.part
-    # Get the revision with the highest revision_number (latest letter)
-    latest_revision = part.revisions.order_by('-revision_number').first()
-    if latest_revision:
-        part.latest_revision = latest_revision
-        part.save()
 
 #ORDER MANAGEMENT MODELS
 
@@ -212,3 +173,48 @@ class Item(models.Model):
         self.order.order_total = total
         self.order.save()
         return super().save(*args, **kwargs)
+
+
+# Signal definitions
+def update_assembly_status(sender, instance, **kwargs):
+    assembly = instance.part.assembly
+    final_status = PartStatus.NEW
+    
+    # Check each status level from highest to lowest
+    for status in reversed(PartStatus.values):
+        all_parts_at_status = True
+        
+        # Check all parts in this assembly
+        for part in assembly.part_set.all():
+            if not part.latest_revision or part.latest_revision.status < status:
+                all_parts_at_status = False
+                break
+        
+        # Check all sub-assemblies
+        if all_parts_at_status:
+            for sub in assembly.sub.all():
+                if sub.status < status:
+                    all_parts_at_status = False
+                    break
+        
+        # If all parts and sub-assemblies are at this status or higher, this is our final status
+        if all_parts_at_status:
+            final_status = status
+            break
+    
+    assembly.status = final_status
+    assembly.save()
+
+
+@receiver(post_save, sender=PartRevision, dispatch_uid="update_part_latest_revision")
+def update_part_latest_revision(sender, instance, **kwargs):
+    # Update the part's latest_revision to point to the highest revision letter
+    part = instance.part
+    # Get the revision with the highest revision_number (latest letter)
+    latest_revision = part.revisions.order_by('-revision_number').first()
+    if latest_revision:
+        part.latest_revision = latest_revision
+        part.save()
+        
+        # Now update the assembly status since the part's latest_revision is updated
+        update_assembly_status(sender, instance, **kwargs)
