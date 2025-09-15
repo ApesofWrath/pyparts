@@ -158,9 +158,16 @@ def newpart(request, project_id, assembly_id = None):
                     if int(p.part_number.split("-")[3]) > part_number:
                         part_number = int(p.part_number.split("-")[3])
             part.part_number = f"{TEAM}-{current_project.prefix}-P-{str(part_number+1).zfill(PART_DIGITS)}"
-            part.status = PartStatus.NEW
             part.save()
             form.save_m2m()
+            
+            # Create initial revision
+            initial_revision = PartRevision.objects.create(
+                part=part,
+                revision_number='A',
+                status=PartStatus.NEW
+            )
+            
             return HttpResponseRedirect(reverse("project",args=(project_id,)))
     else:
         initial_values = {}
@@ -192,6 +199,13 @@ def project(request, project_id):
     for assembly in assembly_list:
         parts = assembly.part_set.all()
         for part in parts:
+            # Add revision info to each part
+            if part.latest_revision:
+                part.current_status = part.latest_revision.status
+                part.current_status_display = part.latest_revision.get_status_display()
+            else:
+                part.current_status = None
+                part.current_status_display = "No revisions"
             parts_list.append(part)
 
     context = {"project": current_project,
@@ -208,6 +222,13 @@ def assembly_view(request, project_id, assembly_id):
     assembly_list = current_assembly.sub.all()
     parts_list = []
     for part in current_assembly.part_set.all():
+        # Add revision info to each part
+        if part.latest_revision:
+            part.current_status = part.latest_revision.status
+            part.current_status_display = part.latest_revision.get_status_display()
+        else:
+            part.current_status = None
+            part.current_status_display = "No revisions"
         parts_list.append(part)
 
     context = {"project": current_project,
@@ -219,13 +240,72 @@ def assembly_view(request, project_id, assembly_id):
     return render(request, "assembly.html", context)
 
 @login_required
-def part(request, project_id, assembly_id, part_id):
+def part(request, project_id, assembly_id, part_id, revision_id=None):
     current_project = get_object_or_404(Project, pk=project_id)
     current_assembly = get_object_or_404(Assembly, pk=assembly_id)
     current_part = get_object_or_404(Part, pk=part_id)
+    
+    # Get the revision - either the specified one or the latest
+    if revision_id:
+        current_revision = get_object_or_404(PartRevision, pk=revision_id, part=current_part)
+    else:
+        current_revision = current_part.latest_revision
+    
+    # Get all revisions for the dropdown
+    revisions = current_part.revisions.all()
+    
     context = {"project": current_project,
                "assembly": current_assembly,
                "part": current_part,
+               "revision": current_revision,
+               "revisions": revisions,
                }
 
     return render(request, "part.html", context)
+
+@login_required
+def newrevision(request, project_id, assembly_id, part_id):
+    context = {}
+    current_part = get_object_or_404(Part, pk=part_id)
+    
+    if request.method == "POST":
+        form = PartRevisionCreateForm(request.POST, request.FILES, user=request.user)
+        
+        if form.is_valid():
+            revision = form.save(commit=False)
+            revision.part = current_part
+            revision.save()
+            return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
+    else:
+        # Set default revision number
+        latest_revision = current_part.revisions.first()
+        if latest_revision:
+            # Increment revision letter
+            next_revision = chr(ord(latest_revision.revision_number) + 1)
+        else:
+            next_revision = 'A'
+        
+        form = PartRevisionCreateForm(user=request.user, initial={'revision_number': next_revision})
+    
+    context['form'] = form
+    context['part'] = current_part
+    return render(request, "newobject.html", context)
+
+@login_required
+def editrevision(request, project_id, assembly_id, part_id, revision_id):
+    context = {}
+    current_revision = get_object_or_404(PartRevision, pk=revision_id, part_id=part_id)
+    
+    if request.method == "POST":
+        form = PartRevisionForm(request.POST, request.FILES, user=request.user, instance=current_revision)
+        
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse("part_revision", args=(project_id, assembly_id, part_id, revision_id)))
+    else:
+        form = PartRevisionForm(user=request.user, instance=current_revision)
+    
+    context['form'] = form
+    context['part'] = current_revision.part
+    context['revision'] = current_revision
+    return render(request, "editobject.html", context)

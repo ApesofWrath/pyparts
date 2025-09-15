@@ -57,24 +57,39 @@ class Part(models.Model):
     part_number = models.CharField(max_length=200)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
+    latest_revision = models.ForeignKey('PartRevision', on_delete=models.SET_NULL, null=True, blank=True, related_name='part_latest')
+
+    def __str__(self):
+        return self.name
+
+class PartRevision(models.Model):
+    part = models.ForeignKey(Part, on_delete=models.CASCADE, related_name='revisions')
+    revision_number = models.CharField(max_length=10, default='A')
     status = models.PositiveSmallIntegerField(choices=PartStatus, default=PartStatus.NEW)
     drawing = models.FileField(upload_to="uploads/%Y/%m/%d", null=True, blank=True)
     material = models.CharField(max_length=200, null=True, blank=True)
     quantity = models.IntegerField(null=True, blank=True)
     mfg_type = models.CharField(max_length=200, choices=MfgTypes, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['part', 'revision_number']
 
     def __str__(self):
-        return self.name
+        return f"{self.part.name} - Rev {self.revision_number}"
 
-@receiver(post_save,sender=Part)
+@receiver(post_save,sender=PartRevision)
 def update_assembly_status(sender, instance, **kwargs):
-    assembly = instance.assembly
+    assembly = instance.part.assembly
     final_status = PartStatus.NEW
     for status in PartStatus.values:
         count = 0
         for part in assembly.part_set.all():
-            if part.status < status:
+            if part.latest_revision and part.latest_revision.status < status:
                 break
             count = count + 1
         for sub in assembly.sub.all():
@@ -85,6 +100,13 @@ def update_assembly_status(sender, instance, **kwargs):
             final_status = status
     assembly.status = final_status
     assembly.save()
+
+@receiver(post_save,sender=PartRevision)
+def update_part_latest_revision(sender, instance, **kwargs):
+    # Update the part's latest_revision to point to this revision
+    part = instance.part
+    part.latest_revision = instance
+    part.save()
 
 #ORDER MANAGEMENT MODELS
 

@@ -21,8 +21,11 @@ urlpatterns = [
     path("projects/<int:project_id>/assembly/<int:assembly_id>/newpart/", views.newpart, name="newpart"),
 
     path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/", views.part, name="part"),
+    path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/revision/<int:revision_id>/", views.part, name="part_revision"),
     path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/delete/", views.delete, name="deletepart"),
     path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/edit/", views.edit, name="editpart"),
+    path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/newrevision/", views.newrevision, name="newrevision"),
+    path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/revision/<int:revision_id>/edit/", views.editrevision, name="editrevision"),
 
     path("mfg/", mfg_views.mfg, name="mfgsummary"),
     path("mfg/projects/<int:project_id>/", mfg_views.mfg_project, name="mfgproject"),

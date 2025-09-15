@@ -5,11 +5,34 @@
 <body class="is-preload">
 
     <div class="pull-right" style="margin-top: 15px;">
+        {% if revision %}
+        <a href="{% url 'editrevision' project.id assembly.id part.id revision.id %}" class="btn btn-success btn-small">
+            <i class="icon-white icon-cog"></i> Edit Revision
+        </a>
+        <a href="{% url 'newrevision' project.id assembly.id part.id %}" class="btn btn-primary btn-small">
+            <i class="icon-white icon-plus"></i> New Revision
+        </a>
+        {% else %}
         <a href="edit" class="btn btn-success btn-small">
             <i class="icon-white icon-cog"></i> Edit Part
         </a>
+        {% endif %}
     </div>
     <h2>{{ part.name }} - Details</h2>
+    
+    {% if revisions %}
+    <div class="revision-selector" style="margin-bottom: 20px;">
+        <label for="revision-select"><strong>Revision:</strong></label>
+        <select id="revision-select" onchange="changeRevision()">
+            {% for rev in revisions %}
+            <option value="{% url 'part_revision' project.id assembly.id part.id rev.id %}" 
+                    {% if revision and rev.id == revision.id %}selected{% elif not revision and forloop.first %}selected{% endif %}>
+                Rev {{ rev.revision_number }} - {{ rev.get_status_display }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
 
     <div>
         <a href="/projects/{{ project.id }}"><b>{{ project.name }}</b></a>
@@ -26,20 +49,38 @@
           <td><a href="/projects/{{ project.id }}">{{ project.name }}</a></td>
         </tr>
         <tr><td><b>Part Number</b></td><td>{{ part.part_number }}</td></tr>
+        {% if revision %}
+        <tr><td><b>Revision</b></td><td>{{ revision.revision_number }}</td></tr>
         <tr>
           <td><b>Status</b></td>
           <td>
-            <span class="label label-status-{{ part.status }}">{{ part.get_status_display }}</span>
+            <span class="label label-status-{{ revision.status }}">{{ revision.get_status_display }}</span>
           </td>
         </tr>
         <tr>
           <td><b>Assignee</b></td>
-          <td></td>
+          <td>{{ revision.owner|default:"Unassigned" }}</td>
         </tr>
-          <tr><td><b>Source material</b></td><td>{{ part.material }}</td></tr>
-        <tr><td><b>Quantity required</b></td><td>{{ part.quantity }}</td></tr>
-        <tr><td><b>Manufacturing method</b></td><td>{{ part.get_mfg_type_display }}</td></tr>
-        <tr><td><b>Drawing</b></td><td>{% if part.drawing %}<a href="{{ part.drawing.url }}">Download</a>{% endif %}</td></tr>
+        <tr><td><b>Source material</b></td><td>{{ revision.material|default:"Not specified" }}</td></tr>
+        <tr><td><b>Quantity required</b></td><td>{{ revision.quantity|default:"Not specified" }}</td></tr>
+        <tr><td><b>Manufacturing method</b></td><td>{{ revision.get_mfg_type_display|default:"Not specified" }}</td></tr>
+        <tr><td><b>Drawing</b></td><td>{% if revision.drawing %}<a href="{{ revision.drawing.url }}">Download</a>{% else %}No drawing{% endif %}</td></tr>
+        <tr><td><b>Created</b></td><td>{{ revision.created_at|date:"M d, Y H:i" }}</td></tr>
+        <tr><td><b>Updated</b></td><td>{{ revision.updated_at|date:"M d, Y H:i" }}</td></tr>
+        {% if revision.notes %}
+        <tr><td><b>Notes</b></td><td>{{ revision.notes }}</td></tr>
+        {% endif %}
+        {% else %}
+        <tr><td><b>Status</b></td><td>No revisions available</td></tr>
+        {% endif %}
       </table>
+
+    <script>
+    function changeRevision() {
+        var select = document.getElementById('revision-select');
+        var url = select.value;
+        window.location.href = url;
+    }
+    </script>
 
     {% endblock content %}

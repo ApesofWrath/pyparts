@@ -33,13 +33,19 @@ class PartForm(forms.ModelForm):
     # specify the name of model to use
     class Meta:
         model = Part
-        fields = ["assembly", "name", "description", "owner"]
+        fields = ["assembly", "name", "description"]
 
 class PartFormEdit(forms.ModelForm):
     # specify the name of model to use
     class Meta:
         model = Part
-        fields = "__all__"
+        fields = ["name", "description"]
+
+class PartRevisionForm(forms.ModelForm):
+    # specify the name of model to use
+    class Meta:
+        model = PartRevision
+        fields = ["status", "drawing", "material", "quantity", "mfg_type", "owner", "notes"]
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -65,6 +71,37 @@ class PartFormEdit(forms.ModelForm):
             if not self.user.groups.filter(name='leads').exists():
                 self._errors["Status"] = self.error_class(["Only a lead can complete this step"])
 
+        return self.cleaned_data
+
+class PartRevisionCreateForm(forms.ModelForm):
+    # specify the name of model to use
+    class Meta:
+        model = PartRevision
+        fields = ["revision_number", "status", "drawing", "material", "quantity", "mfg_type", "owner", "notes"]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+
+        if self.cleaned_data.get("status") >= PartStatus.MFG_REVIEWED:
+            if self.cleaned_data.get("drawing") == None:
+                self._errors["drawing"] = self.error_class(["Drawing required to advance status"])
+            if self.cleaned_data.get("material") == None:
+                self._errors["material"] = self.error_class(["Material required to advance status"])
+            if self.cleaned_data.get("quantity") == None:
+                self._errors["quantity"] = self.error_class(["Quantity required to advance status"])
+            if self.cleaned_data.get("mfg_type") == None:
+                self._errors["mfg_type"] = self.error_class(["Manufacturing method required to advance status"])
+
+        if self.cleaned_data.get("status") == PartStatus.DESIGN_REVIEWED:
+            if not self.user.groups.filter(name='mentors').exists():
+                self._errors["Status"] = self.error_class(["Only a mentor can complete this step"])
+        if self.cleaned_data.get("status") in [PartStatus.MFG_REVIEWED, PartStatus.QUALITY_CHECKED] :
+            if not self.user.groups.filter(name='leads').exists():
+                self._errors["Status"] = self.error_class(["Only a lead can complete this step"])
 
         return self.cleaned_data
 
