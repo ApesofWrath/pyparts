@@ -41,5 +41,7 @@ urlpatterns = [
     
     # Debug endpoints
     path("debug/upload/", debug_views.debug_upload_page, name="debug_upload"),
+    path("debug/media/", debug_views.debug_media_page, name="debug_media"),
     path("debug/test-upload/", debug_views.test_file_upload, name="test_upload"),
+    path("debug/media-access/", debug_views.test_media_access, name="test_media_access"),
 ]

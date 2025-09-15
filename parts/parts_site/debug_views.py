@@ -40,11 +40,17 @@ def test_file_upload(request):
         file_path = default_storage.save(f"test_uploads/{file.name}", file)
         logger.info(f"File saved to: {file_path}")
         
+        # Get the full URL for the file
+        from django.conf import settings
+        file_url = f"{settings.MEDIA_URL}{file_path}"
+        
         return JsonResponse({
             'success': True,
             'file_path': file_path,
+            'file_url': file_url,
             'file_size': file.size,
-            'media_root': media_root
+            'media_root': media_root,
+            'media_url': settings.MEDIA_URL
         })
         
     except Exception as e:
@@ -56,3 +62,40 @@ def debug_upload_page(request):
     Debug page to test file uploads
     """
     return render(request, 'debug_upload.html')
+
+def debug_media_page(request):
+    """
+    Debug page to view media files
+    """
+    return render(request, 'debug_media.html')
+
+def test_media_access(request):
+    """
+    Test if media files are accessible
+    """
+    from django.conf import settings
+    import os
+    
+    media_root = settings.MEDIA_ROOT
+    media_url = settings.MEDIA_URL
+    
+    # List files in media directory
+    files = []
+    if os.path.exists(media_root):
+        for root, dirs, filenames in os.walk(media_root):
+            for filename in filenames:
+                rel_path = os.path.relpath(os.path.join(root, filename), media_root)
+                file_url = f"{media_url}{rel_path}"
+                files.append({
+                    'path': rel_path,
+                    'url': file_url,
+                    'full_path': os.path.join(root, filename)
+                })
+    
+    return JsonResponse({
+        'media_root': media_root,
+        'media_url': media_url,
+        'files': files,
+        'media_root_exists': os.path.exists(media_root),
+        'media_root_writable': os.access(media_root, os.W_OK) if os.path.exists(media_root) else False
+    })

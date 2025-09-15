@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Media Files</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .file-list { margin: 20px 0; }
+        .file-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .file-url { color: #007cba; text-decoration: none; }
+        .file-url:hover { text-decoration: underline; }
+        .test-link { display: inline-block; margin: 5px; padding: 5px 10px; background: #007cba; color: white; text-decoration: none; }
+        .test-link:hover { background: #005a87; }
+    </style>
+</head>
+<body>
+    <h1>Debug Media Files</h1>
+    
+    <div id="media-info"></div>
+    <div id="file-list" class="file-list"></div>
+    
+    <script>
+        async function loadMediaInfo() {
+            try {
+                const response = await fetch('/debug/media-access/');
+                const data = await response.json();
+                
+                document.getElementById('media-info').innerHTML = `
+                    <h3>Media Configuration</h3>
+                    <p><strong>Media Root:</strong> ${data.media_root}</p>
+                    <p><strong>Media URL:</strong> ${data.media_url}</p>
+                    <p><strong>Media Root Exists:</strong> ${data.media_root_exists ? 'Yes' : 'No'}</p>
+                    <p><strong>Media Root Writable:</strong> ${data.media_root_writable ? 'Yes' : 'No'}</p>
+                `;
+                
+                let fileListHtml = '<h3>Files in Media Directory</h3>';
+                if (data.files.length === 0) {
+                    fileListHtml += '<p>No files found in media directory.</p>';
+                } else {
+                    data.files.forEach(file => {
+                        fileListHtml += `
+                            <div class="file-item">
+                                <p><strong>Path:</strong> ${file.path}</p>
+                                <p><strong>URL:</strong> <a href="${file.url}" class="file-url" target="_blank">${file.url}</a></p>
+                                <p><strong>Full Path:</strong> ${file.full_path}</p>
+                                <a href="${file.url}" class="test-link" target="_blank">Test Download</a>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('file-list').innerHTML = fileListHtml;
+                
+            } catch (error) {
+                document.getElementById('media-info').innerHTML = `
+                    <h3>Error</h3>
+                    <p>Failed to load media info: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Load media info when page loads
+        loadMediaInfo();
+    </script>
+</body>
+</html>
