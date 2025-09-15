@@ -6,36 +6,39 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-parts_db}
-      - POSTGRES_USER=${POSTGRES_USER:-parts_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-parts_password}
-    restart: unless-stopped
+      - POSTGRES_DB=parts_db
+      - POSTGRES_USER=parts_user
+      - POSTGRES_PASSWORD=parts_password
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parts_user} -d ${POSTGRES_DB:-parts_db}"]
+      test: ["CMD-SHELL", "pg_isready -U parts_user -d parts_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   web:
-    image: ghcr.io/apesofwrath/pyparts:latest
+    build: .
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 parts.wsgi:application"
+             gunicorn --bind 0.0.0.0:8000 --workers 3 parts.wsgi:application"
     volumes:
+      - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
+    ports:
+      - "8000:8000"
     environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL}
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-this
+      - DATABASE_URL=postgres://parts_user:parts_password@db:5432/parts_db
       - G_CLIENT_ID=${G_CLIENT_ID}
       - G_SECRET=${G_SECRET}
       - SLACK_TOKEN=${SLACK_TOKEN}
     depends_on:
       db:
         condition: service_healthy
-    restart: unless-stopped
 
 volumes:
   postgres_data:

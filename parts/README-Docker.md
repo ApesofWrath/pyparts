@@ -14,9 +14,14 @@ This Django application has been containerized for easy deployment in production
    - Configure your Google OAuth credentials
    - Set your Slack token if using Slack integration
 
-3. **Build and run with Docker Compose:**
+3. **Run with pre-built image:**
    ```bash
-   docker-compose up --build
+   docker-compose up
+   ```
+
+   **Or for development (builds locally):**
+   ```bash
+   docker-compose -f docker-compose.dev.yml up --build
    ```
 
 4. **Access the application:**
@@ -64,18 +69,24 @@ This project includes automated CI/CD pipelines that:
 
 Images are automatically built and available at:
 ```
-ghcr.io/your-username/your-repo:latest
-ghcr.io/your-username/your-repo:main
-ghcr.io/your-username/your-repo:v1.0.0
+ghcr.io/apesofwrath/pyparts:latest
+ghcr.io/apesofwrath/pyparts:main
+ghcr.io/apesofwrath/pyparts:v1.0.0
 ```
 
-To use a pre-built image:
+The Docker Compose files are already configured to use the pre-built image:
 ```bash
-# Pull the latest image
-docker pull ghcr.io/your-username/your-repo:latest
-
-# Run with docker-compose (update image in compose file)
+# Run with pre-built image (default)
 docker-compose up
+
+# Run with specific version
+docker-compose up --pull always
+```
+
+For development with local builds:
+```bash
+# Use development compose file
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
 ## Production Deployment
