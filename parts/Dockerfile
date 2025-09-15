@@ -31,6 +31,9 @@ RUN mkdir -p /app/static /app/parts_site/static
 # Create staticfiles directory
 RUN mkdir -p /app/staticfiles
 
+# Create media directory for file uploads
+RUN mkdir -p /app/media
+
 # Set a temporary SECRET_KEY for build-time operations
 ENV SECRET_KEY=temp-secret-key-for-build
 ENV DEBUG=False
@@ -41,7 +44,8 @@ RUN python manage.py collectstatic --noinput
 
 # Create a non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app && \
+    chmod -R 755 /app/media
 USER appuser
 
 # Expose port

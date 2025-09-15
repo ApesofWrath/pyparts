@@ -21,11 +21,20 @@ def test_file_upload(request):
         file = request.FILES['file']
         logger.info(f"File upload attempt: {file.name}, size: {file.size}")
         
-        # Check if media directory exists
+        # Check if media directory exists and has proper permissions
         media_root = default_storage.location
         if not os.path.exists(media_root):
-            os.makedirs(media_root, exist_ok=True)
-            logger.info(f"Created media directory: {media_root}")
+            try:
+                os.makedirs(media_root, exist_ok=True)
+                logger.info(f"Created media directory: {media_root}")
+            except PermissionError as e:
+                logger.error(f"Permission denied creating media directory: {e}")
+                return JsonResponse({'error': f'Permission denied creating media directory: {e}'}, status=500)
+        
+        # Check write permissions
+        if not os.access(media_root, os.W_OK):
+            logger.error(f"No write permission to media directory: {media_root}")
+            return JsonResponse({'error': f'No write permission to media directory: {media_root}'}, status=500)
         
         # Try to save the file
         file_path = default_storage.save(f"test_uploads/{file.name}", file)

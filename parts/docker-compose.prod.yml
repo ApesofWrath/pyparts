@@ -19,8 +19,10 @@ services:
   web:
     image: ghcr.io/apesofwrath/pyparts:latest
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "mkdir -p /app/media && chmod 755 /app/media &&
+             python manage.py migrate &&
              python manage.py collectstatic --noinput &&
+             python manage.py fix_permissions &&
              gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 --access-logfile - --error-logfile - parts.wsgi:application"
     volumes:
       - static_volume:/app/staticfiles
