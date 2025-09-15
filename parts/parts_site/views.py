@@ -40,7 +40,7 @@ def edit(request, project_id = None, assembly_id = None, part_id = None):
  
     if request.method == "POST":
         if part_id:
-            form = PartFormEdit(request.POST, request.FILES, user=request.user, instance=get_object_or_404(Part, pk=part_id,))
+            form = PartFormEdit(request.POST, request.FILES, instance=get_object_or_404(Part, pk=part_id,))
             print(request.FILES)
         elif assembly_id:
             form = AssemblyFormEdit(request.POST, instance=get_object_or_404(Assembly, pk=assembly_id))
@@ -61,7 +61,7 @@ def edit(request, project_id = None, assembly_id = None, part_id = None):
             
     else:
         if part_id:
-            form = PartFormEdit(user=request.user, instance=get_object_or_404(Part, pk=part_id))
+            form = PartFormEdit(instance=get_object_or_404(Part, pk=part_id))
         elif assembly_id:
             form = AssemblyFormEdit(instance=get_object_or_404(Assembly, pk=assembly_id))
         elif project_id:
