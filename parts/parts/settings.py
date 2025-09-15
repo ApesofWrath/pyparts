@@ -52,6 +52,26 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
 ]
 
+# Add additional CSRF trusted origins from environment variable
+csrf_origins = env('CSRF_TRUSTED_ORIGINS', default='')
+if csrf_origins:
+    # Split by comma and add to the list
+    additional_origins = [origin.strip() for origin in csrf_origins.split(',') if origin.strip()]
+    CSRF_TRUSTED_ORIGINS.extend(additional_origins)
+
+# For production, add common deployment platforms
+if not DEBUG:
+    # Add common production domains
+    CSRF_TRUSTED_ORIGINS.extend([
+        "https://your-domain.com",  # Replace with your actual domain
+        "https://www.your-domain.com",  # Replace with your actual domain
+    ])
+    
+    # CSRF cookie settings for production
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
 
 # Application definition
 
