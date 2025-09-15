@@ -355,7 +355,7 @@
             };
             document.head.appendChild(stlScript);
         } else if (fileExtension === 'dxf') {
-            console.log('Loading DXF with CADViewer JS');
+            console.log('Loading DXF with dxf-viewer');
             loadDXFWithCADViewer(fileUrl);
         } else {
             console.log('Initializing 3D viewer directly');
@@ -365,47 +365,120 @@
 
 
     function loadDXFWithCADViewer(fileUrl) {
-        console.log('Loading DXF with CADViewer JS:', fileUrl);
+        console.log('Loading DXF with dxf-viewer:', fileUrl);
         
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const threejsContainer = document.getElementById('threejs-container');
         
-        // Hide 3D container and show CADViewer
-        if (threejsContainer) threejsContainer.style.display = 'none';
+        // Check if dxf-viewer is available
+        if (typeof DXFViewer === 'undefined') {
+            console.error('dxf-viewer library not loaded');
+            showDXFFallback(fileUrl);
+            return;
+        }
         
-        // Create CADViewer container
-        const cadViewerContainer = document.createElement('div');
-        cadViewerContainer.id = 'cadviewer-container';
-        cadViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
+        // Create dxf-viewer container
+        const dxfViewerContainer = document.createElement('div');
+        dxfViewerContainer.id = 'dxfviewer-container';
+        dxfViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
         
-        // Replace the 3D container content with CADViewer
+        // Replace the 3D container content with dxf-viewer
         if (threejsContainer) {
             threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(cadViewerContainer);
+            threejsContainer.appendChild(dxfViewerContainer);
             threejsContainer.style.display = 'block';
         }
         
-        // Initialize CADViewer JS
+        // Initialize dxf-viewer
         try {
-            const cadViewer = new CADViewer({
-                container: cadViewerContainer,
-                licensePath: 'https://cdn.cadviewer.com/cadviewerjs/license.txt',
+            const dxfViewer = new DXFViewer(dxfViewerContainer, {
                 file: fileUrl,
                 onLoad: function() {
-                    console.log('DXF loaded successfully with CADViewer JS');
+                    console.log('DXF loaded successfully with dxf-viewer');
                     if (loadingSpinner) loadingSpinner.style.display = 'none';
                     if (previewContent) previewContent.style.display = 'block';
                 },
                 onError: function(error) {
-                    console.error('CADViewer JS error:', error);
-                    showPreviewError();
+                    console.error('dxf-viewer error:', error);
+                    showDXFFallback(fileUrl);
                 }
             });
         } catch (error) {
-            console.error('Failed to initialize CADViewer JS:', error);
-            showPreviewError();
+            console.error('Failed to initialize dxf-viewer:', error);
+            showDXFFallback(fileUrl);
         }
+    }
+    
+    function showDXFFallback(fileUrl) {
+        console.log('Showing DXF fallback for:', fileUrl);
+        
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        // Create DXF fallback placeholder
+        const dxfPlaceholder = document.createElement('div');
+        dxfPlaceholder.style.cssText = 'width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;';
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.9;';
+        iconDiv.innerHTML = '📐';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px;';
+        titleDiv.textContent = 'DXF Drawing';
+        
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; opacity: 0.9; line-height: 1.4;';
+        descDiv.innerHTML = 'DXF files require CAD software for full viewing.<br/>Download the file to view in AutoCAD or compatible software.';
+        
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
+        
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = fileUrl;
+        downloadBtn.target = '_blank';
+        downloadBtn.className = 'btn btn-light btn-sm';
+        downloadBtn.style.cssText = 'color: #667eea; font-weight: bold;';
+        downloadBtn.innerHTML = '<i class="icon-download"></i> Download DXF';
+        
+        const convertBtn = document.createElement('button');
+        convertBtn.className = 'btn btn-outline-light btn-sm';
+        convertBtn.style.cssText = 'border: 2px solid white; color: white; font-weight: bold;';
+        convertBtn.innerHTML = '<i class="icon-refresh"></i> Convert to PDF';
+        convertBtn.onclick = () => showDXFConversionInfo();
+        
+        buttonContainer.appendChild(downloadBtn);
+        buttonContainer.appendChild(convertBtn);
+        
+        dxfPlaceholder.appendChild(iconDiv);
+        dxfPlaceholder.appendChild(titleDiv);
+        dxfPlaceholder.appendChild(descDiv);
+        dxfPlaceholder.appendChild(buttonContainer);
+        
+        // Replace the 3D container content with DXF placeholder
+        if (threejsContainer) {
+            threejsContainer.innerHTML = '';
+            threejsContainer.appendChild(dxfPlaceholder);
+            threejsContainer.style.display = 'block';
+        }
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        
+        console.log('DXF fallback displayed');
+    }
+    
+    function showDXFConversionInfo() {
+        alert('To convert DXF to PDF for web viewing:\n\n' +
+              '1. Open the DXF file in AutoCAD\n' +
+              '2. Go to File > Export > PDF\n' +
+              '3. Save and upload the PDF file for web preview\n\n' +
+              'Alternatively, use online converters like:\n' +
+              '• Convertio.co\n' +
+              '• CloudConvert.com\n' +
+              '• Zamzar.com');
     }
 
 
