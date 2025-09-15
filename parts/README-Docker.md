@@ -34,7 +34,7 @@ The Docker Compose setup includes:
 - **web**: Django application server (Gunicorn)
 - **db**: PostgreSQL database
 
-**Note**: Nginx is not included in the Docker setup and should be configured externally.
+**Note**: The application serves static and media files directly through Django/Gunicorn - no external web server required.
 
 ## GitHub Actions CI/CD
 
@@ -102,33 +102,27 @@ Make sure to set these environment variables in production:
 - `G_SECRET`: Google OAuth client secret
 - `SLACK_TOKEN`: Slack bot token (optional)
 
-### External Nginx Configuration
+### Static and Media Files
 
-The application is designed to work with an external nginx installation. Use the provided nginx configuration files:
+The application serves static and media files directly through Django:
 
-- `nginx.conf` - Basic configuration for development/testing
-- `nginx.prod.conf` - Production configuration with SSL support
+- **Static files**: Served from `/static/` URL path
+- **Media files**: Served from `/media/` URL path
+- **No external web server required**: Everything runs through Gunicorn
 
-**To configure nginx:**
-
-1. Copy the appropriate nginx config to your nginx sites directory
-2. Update the following paths in the config:
-   - `server_name` - Replace with your actual domain
-   - `upstream django_parts` - Point to your Docker container IP/port
-   - Static files path - Point to your static files location
-   - Media files path - Point to your media files location
-   - SSL certificate paths (for production)
-
-3. Test and reload nginx configuration
+**File serving:**
+- Static files are collected to `/app/staticfiles/` in the container
+- Media files are stored in `/app/media/` in the container
+- Both are served directly by Django/Gunicorn
 
 ### Security Considerations
 
 1. **Change the default database credentials** in `docker-compose.yml`
 2. **Use a strong SECRET_KEY** for Django
-3. **Set up proper SSL/TLS** termination with your external nginx
+3. **Set up proper SSL/TLS** termination (consider using a load balancer or reverse proxy)
 4. **Configure proper ALLOWED_HOSTS** for your domain
 5. **Use environment-specific settings** for different deployments
-6. **Configure nginx security headers** (included in provided configs)
+6. **Consider using a reverse proxy** (nginx, Apache, or cloud load balancer) for production
 
 ### Scaling
 
@@ -138,7 +132,7 @@ To scale the web service:
 docker-compose up --scale web=3
 ```
 
-**Note**: When scaling, update your nginx upstream configuration to include all web service instances.
+**Note**: When scaling, consider using a load balancer to distribute traffic across multiple web service instances.
 
 ### Database Migrations
 
@@ -154,7 +148,7 @@ docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py collectstatic --noinput
 ```
 
-**Note**: After collecting static files, ensure your nginx configuration points to the correct static files directory.
+**Note**: Static files are automatically served by Django - no additional configuration needed.
 
 ### Create Superuser
 
@@ -173,28 +167,26 @@ The application uses local file storage by default. For production, consider:
 
 Update the `DEFAULT_FILE_STORAGE` setting in `settings.py` accordingly.
 
-## Nginx Integration
+## File Management
 
-### Static Files Setup
+### Static Files
 
-1. **Collect static files** from your Django container:
+Static files are automatically collected and served:
+
+1. **Collect static files** (done automatically in Docker):
    ```bash
    docker-compose exec web python manage.py collectstatic --noinput
    ```
 
-2. **Copy static files** to your nginx server:
-   ```bash
-   # Copy from Docker volume to nginx server
-   docker cp $(docker-compose ps -q web):/app/static /path/to/nginx/static/
-   ```
+2. **Access static files** at `http://your-domain/static/`
 
-3. **Update nginx configuration** to point to the correct static files path.
+### Media Files
 
-### Media Files Setup
+Media files are automatically handled:
 
-1. **Create media directory** on your nginx server
-2. **Update nginx configuration** to point to the media files location
-3. **Ensure proper permissions** for nginx to serve media files
+1. **Upload files** through the Django admin or application
+2. **Access media files** at `http://your-domain/media/`
+3. **Files are stored** in the Docker volume for persistence
 
 ## Monitoring
 

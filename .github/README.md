@@ -63,7 +63,7 @@ This directory contains GitHub Actions workflows for automated CI/CD of the Djan
 Images are automatically pushed to GitHub Container Registry:
 
 - **Registry:** `ghcr.io`
-- **Repository:** `ghcr.io/your-username/your-repo`
+- **Repository:** `ghcr.io/apesofwrath/pyparts`
 - **Tags:**
   - `latest` - Latest from main branch
   - `main` - Latest from main branch
@@ -76,13 +76,13 @@ Images are automatically pushed to GitHub Container Registry:
 ### Pull and Run Latest Image
 ```bash
 # Pull the latest image
-docker pull ghcr.io/your-username/your-repo:latest
+docker pull ghcr.io/apesofwrath/pyparts:latest
 
 # Run the container
 docker run -p 8000:8000 \
   -e SECRET_KEY=your-secret-key \
   -e DATABASE_URL=postgres://user:pass@host:5432/db \
-  ghcr.io/your-username/your-repo:latest
+  ghcr.io/apesofwrath/pyparts:latest
 ```
 
 ### Use with Docker Compose
@@ -90,7 +90,7 @@ docker run -p 8000:8000 \
 version: '3.8'
 services:
   web:
-    image: ghcr.io/your-username/your-repo:latest
+    image: ghcr.io/apesofwrath/pyparts:latest
     ports:
       - "8000:8000"
     environment:
@@ -101,10 +101,10 @@ services:
 ### Deploy Specific Version
 ```bash
 # Pull specific version
-docker pull ghcr.io/your-username/your-repo:v1.2.3
+docker pull ghcr.io/apesofwrath/pyparts:v1.2.3
 
 # Run specific version
-docker run -p 8000:8000 ghcr.io/your-username/your-repo:v1.2.3
+docker run -p 8000:8000 ghcr.io/apesofwrath/pyparts:v1.2.3
 ```
 
 ## Manual Deployment
