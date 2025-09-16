@@ -289,4 +289,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Slack Integration
 SLACK_TOKEN = env('SLACK_TOKEN', default='')
+
+# Django Slack configuration
+if SLACK_TOKEN:
+    SLACK_BACKEND = 'django_slack.backends.RequestsBackend'
+    SLACK_ENDPOINT_URL = 'https://hooks.slack.com/services/'
+else:
+    # Disable Slack integration if no token is provided
+    SLACK_BACKEND = 'django_slack.backends.DisabledBackend'

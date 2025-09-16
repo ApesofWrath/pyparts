@@ -3,8 +3,11 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+import logging
 
 from django_slack import slack_message
+
+logger = logging.getLogger(__name__)
 
 #PART MANAGEMENT MODELS
 
@@ -126,9 +129,12 @@ def send_slack_message_on_ready(sender, instance, **kwargs):
                 ]
                 },
             ]
-            slack_message('slack/order_ready.slack', {
-                'order': instance,
-            }, attachments=attachments)
+            try:
+                slack_message('slack/order_ready.slack', {
+                    'order': instance,
+                }, attachments=attachments)
+            except Exception as e:
+                logger.error(f"Failed to send Slack message for order ready: {e}")
         if old_instance.status != OrderStatus.PLACED and instance.status == OrderStatus.PLACED:
             attachments = [
                 {
@@ -147,9 +153,12 @@ def send_slack_message_on_ready(sender, instance, **kwargs):
                 ]
                 },
             ]
-            slack_message('slack/order_ready.slack', {
-                'order': instance,
-            }, attachments=attachments)
+            try:
+                slack_message('slack/order_ready.slack', {
+                    'order': instance,
+                }, attachments=attachments)
+            except Exception as e:
+                logger.error(f"Failed to send Slack message for order placed: {e}")
     
 class Item(models.Model):
     name = models.CharField(max_length=200)
