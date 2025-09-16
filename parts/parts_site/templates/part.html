@@ -696,17 +696,101 @@
     }
 
     function loadPDFPreview(fileUrl) {
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let pdfContainer = document.getElementById('pdf-container');
-        let pdfViewer = document.getElementById('pdf-viewer');
-
-        // Use Google Docs viewer for PDF preview
-        pdfViewer.src = 'https://docs.google.com/gview?url=' + encodeURIComponent(fileUrl) + '&embedded=true';
+        console.log('loadPDFPreview called with:', fileUrl);
         
-        loadingSpinner.style.display = 'none';
-        previewContent.style.display = 'block';
-        pdfContainer.style.display = 'block';
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        // Create PDF preview container
+        const pdfContainer = document.createElement('div');
+        pdfContainer.id = 'pdf-preview-container';
+        pdfContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;';
+        
+        // Create PDF icon
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.8;';
+        iconDiv.innerHTML = '📄';
+        
+        // Create title
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px; color: #333;';
+        titleDiv.textContent = 'PDF Document';
+        
+        // Create description
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; color: #666; line-height: 1.4;';
+        descDiv.innerHTML = 'Portable Document Format<br/>Technical drawings and documentation';
+        
+        // Create info section
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'font-size: 14px; color: #888; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0; max-width: 300px;';
+        infoDiv.innerHTML = 'PDF files contain technical drawings and documentation.<br/>Download to view in your preferred PDF viewer.';
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
+        
+        // Download button
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = fileUrl;
+        downloadBtn.target = '_blank';
+        downloadBtn.className = 'btn btn-primary btn-sm';
+        downloadBtn.style.cssText = 'font-weight: bold;';
+        downloadBtn.innerHTML = '<i class="icon-download"></i> Download PDF';
+        
+        // View button
+        const viewBtn = document.createElement('a');
+        viewBtn.href = fileUrl;
+        viewBtn.target = '_blank';
+        viewBtn.className = 'btn btn-outline-primary btn-sm';
+        viewBtn.style.cssText = 'font-weight: bold;';
+        viewBtn.innerHTML = '<i class="icon-eye-open"></i> Open in New Tab';
+        
+        // Info button
+        const infoBtn = document.createElement('button');
+        infoBtn.className = 'btn btn-outline-secondary btn-sm';
+        infoBtn.style.cssText = 'font-weight: bold;';
+        infoBtn.innerHTML = '<i class="icon-info-sign"></i> View Info';
+        infoBtn.onclick = () => showPDFInfo();
+        
+        buttonContainer.appendChild(downloadBtn);
+        buttonContainer.appendChild(viewBtn);
+        buttonContainer.appendChild(infoBtn);
+        
+        // Assemble the container
+        pdfContainer.appendChild(iconDiv);
+        pdfContainer.appendChild(titleDiv);
+        pdfContainer.appendChild(descDiv);
+        pdfContainer.appendChild(infoDiv);
+        pdfContainer.appendChild(buttonContainer);
+        
+        // Replace the 3D container content with PDF preview
+        if (threejsContainer) {
+            threejsContainer.innerHTML = '';
+            threejsContainer.appendChild(pdfContainer);
+            threejsContainer.style.display = 'block';
+        }
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        
+        console.log('PDF preview displayed');
+    }
+    
+    function showPDFInfo() {
+        alert('PDF Document Information:\n\n' +
+              'PDF files contain technical drawings and documentation:\n' +
+              '• Engineering drawings and blueprints\n' +
+              '• Technical specifications\n' +
+              '• Assembly instructions\n' +
+              '• Quality control documents\n\n' +
+              'To view PDF files:\n' +
+              '• Use built-in browser PDF viewer\n' +
+              '• Download and open in Adobe Reader\n' +
+              '• Use online PDF viewers\n' +
+              '• Open in CAD software that supports PDF import\n\n' +
+              'PDF files are widely supported across all platforms!');
     }
 
     function loadImagePreview(fileUrl) {
