@@ -355,11 +355,8 @@
             };
             document.head.appendChild(stlScript);
         } else if (fileExtension === 'dxf') {
-            console.log('Loading DXF with dxf-viewer');
-            loadDXFWithCADViewer(fileUrl).catch(error => {
-                console.error('Error loading DXF:', error);
-                showDXFFallback(fileUrl);
-            });
+            console.log('Loading DXF with cad-simple-viewer');
+            loadDXFWithCADViewer(fileUrl);
         } else {
             console.log('Initializing 3D viewer directly');
             init3DViewer(fileUrl, fileExtension);
@@ -367,85 +364,50 @@
     }
 
 
-    async function loadDXFWithCADViewer(fileUrl) {
-        console.log('Loading DXF with dxf-viewer:', fileUrl);
+    function loadDXFWithCADViewer(fileUrl) {
+        console.log('Loading DXF with cad-simple-viewer:', fileUrl);
         
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const threejsContainer = document.getElementById('threejs-container');
         
+        // Check if cad-simple-viewer is available
+        if (typeof window.CADSimpleViewer === 'undefined') {
+            console.error('cad-simple-viewer library not loaded');
+            showDXFFallback(fileUrl);
+            return;
+        }
+        
         try {
-            // Dynamically import dxf-viewer as ES module
-            const dxfViewerModule = await import('https://cdn.jsdelivr.net/npm/dxf-viewer@1.0.42/+esm');
-            console.log('dxf-viewer module loaded successfully');
-            console.log('Available exports:', Object.keys(dxfViewerModule));
+            // Create cad-simple-viewer container
+            const cadViewerContainer = document.createElement('div');
+            cadViewerContainer.id = 'cadviewer-container';
+            cadViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
             
-            // Try different possible class names
-            const DxfViewerClass = dxfViewerModule.DxfViewer || dxfViewerModule.DXFViewer || dxfViewerModule.Viewer2d || dxfViewerModule.default;
-            
-            if (!DxfViewerClass) {
-                throw new Error('No DXF viewer class found in module exports');
-            }
-            
-            console.log('Using DXF viewer class:', DxfViewerClass.name);
-            
-            // Create dxf-viewer container
-            const dxfViewerContainer = document.createElement('div');
-            dxfViewerContainer.id = 'dxfviewer-container';
-            dxfViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
-            
-            // Replace the 3D container content with dxf-viewer
+            // Replace the 3D container content with cad-simple-viewer
             if (threejsContainer) {
                 threejsContainer.innerHTML = '';
-                threejsContainer.appendChild(dxfViewerContainer);
+                threejsContainer.appendChild(cadViewerContainer);
                 threejsContainer.style.display = 'block';
             }
             
-            // Initialize dxf-viewer - try different initialization methods
-            let viewer;
-            try {
-                // Try with containerId
-                viewer = new DxfViewerClass({ containerId: 'dxfviewer-container' });
-            } catch (e1) {
-                try {
-                    // Try with direct container element
-                    viewer = new DxfViewerClass(dxfViewerContainer);
-                } catch (e2) {
-                    try {
-                        // Try with no parameters
-                        viewer = new DxfViewerClass();
-                        // Then set container
-                        if (viewer.setContainer) {
-                            viewer.setContainer(dxfViewerContainer);
-                        }
-                    } catch (e3) {
-                        throw new Error('Could not initialize DXF viewer with any method');
-                    }
+            // Initialize cad-simple-viewer
+            const viewer = new window.CADSimpleViewer({
+                container: cadViewerContainer,
+                file: fileUrl,
+                onLoad: function() {
+                    console.log('DXF loaded successfully with cad-simple-viewer');
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                    if (previewContent) previewContent.style.display = 'block';
+                },
+                onError: function(error) {
+                    console.error('cad-simple-viewer error:', error);
+                    showDXFFallback(fileUrl);
                 }
-            }
-            
-            // Load the DXF file - try different methods
-            if (viewer.loadModel) {
-                await viewer.loadModel({ src: fileUrl });
-            } else if (viewer.load) {
-                await viewer.load(fileUrl);
-            } else if (viewer.loadFile) {
-                await viewer.loadFile(fileUrl);
-            } else {
-                throw new Error('No load method found on DXF viewer');
-            }
-            
-            // Go to home view if method exists
-            if (viewer.goToHomeView) {
-                viewer.goToHomeView();
-            }
-            
-            console.log('DXF loaded successfully with dxf-viewer');
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (previewContent) previewContent.style.display = 'block';
+            });
             
         } catch (error) {
-            console.error('Failed to load or initialize dxf-viewer:', error);
+            console.error('Failed to initialize cad-simple-viewer:', error);
             showDXFFallback(fileUrl);
         }
     }
