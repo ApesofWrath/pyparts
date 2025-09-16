@@ -698,52 +698,9 @@
     function loadPDFPreview(fileUrl) {
         console.log('loadPDFPreview called with:', fileUrl);
         
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Create PDF viewer container
-        const pdfContainer = document.createElement('div');
-        pdfContainer.id = 'pdf-viewer-container';
-        pdfContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; position: relative;';
-        
-        // Create iframe for PDF.js viewer
-        const pdfIframe = document.createElement('iframe');
-        pdfIframe.id = 'pdf-iframe';
-        pdfIframe.style.cssText = 'width: 100%; height: 100%; border: none; border-radius: 4px;';
-        pdfIframe.src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fileUrl)}`;
-        
-        // Add error handling for iframe
-        pdfIframe.onerror = function() {
-            console.log('PDF.js viewer failed to load, showing fallback');
-            showPDFFallback(fileUrl);
-        };
-        
-        // Add load event handler
-        pdfIframe.onload = function() {
-            console.log('PDF.js viewer loaded successfully');
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (previewContent) previewContent.style.display = 'block';
-        };
-        
-        // Add timeout fallback
-        setTimeout(() => {
-            if (loadingSpinner && loadingSpinner.style.display !== 'none') {
-                console.log('PDF viewer timeout, showing fallback');
-                showPDFFallback(fileUrl);
-            }
-        }, 10000); // 10 second timeout
-        
-        pdfContainer.appendChild(pdfIframe);
-        
-        // Replace the 3D container content with PDF viewer
-        if (threejsContainer) {
-            threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(pdfContainer);
-            threejsContainer.style.display = 'block';
-        }
-        
-        console.log('PDF viewer iframe created');
+        // For now, just show the PDF fallback since CORS prevents PDF.js from working
+        // with files from different domains. The fallback provides download and view options.
+        showPDFFallback(fileUrl);
     }
     
     function showPDFFallback(fileUrl) {
