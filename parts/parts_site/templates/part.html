@@ -355,7 +355,7 @@
             };
             document.head.appendChild(stlScript);
         } else if (fileExtension === 'dxf') {
-            console.log('Loading DXF with cad-simple-viewer');
+            console.log('Loading DXF with fallback placeholder');
             loadDXFWithCADViewer(fileUrl);
         } else {
             console.log('Initializing 3D viewer directly');
@@ -365,51 +365,10 @@
 
 
     function loadDXFWithCADViewer(fileUrl) {
-        console.log('Loading DXF with cad-simple-viewer:', fileUrl);
+        console.log('Loading DXF with fallback placeholder:', fileUrl);
         
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Check if cad-simple-viewer is available
-        if (typeof window.CADSimpleViewer === 'undefined') {
-            console.error('cad-simple-viewer library not loaded');
-            showDXFFallback(fileUrl);
-            return;
-        }
-        
-        try {
-            // Create cad-simple-viewer container
-            const cadViewerContainer = document.createElement('div');
-            cadViewerContainer.id = 'cadviewer-container';
-            cadViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
-            
-            // Replace the 3D container content with cad-simple-viewer
-            if (threejsContainer) {
-                threejsContainer.innerHTML = '';
-                threejsContainer.appendChild(cadViewerContainer);
-                threejsContainer.style.display = 'block';
-            }
-            
-            // Initialize cad-simple-viewer
-            const viewer = new window.CADSimpleViewer({
-                container: cadViewerContainer,
-                file: fileUrl,
-                onLoad: function() {
-                    console.log('DXF loaded successfully with cad-simple-viewer');
-                    if (loadingSpinner) loadingSpinner.style.display = 'none';
-                    if (previewContent) previewContent.style.display = 'block';
-                },
-                onError: function(error) {
-                    console.error('cad-simple-viewer error:', error);
-                    showDXFFallback(fileUrl);
-                }
-            });
-            
-        } catch (error) {
-            console.error('Failed to initialize cad-simple-viewer:', error);
-            showDXFFallback(fileUrl);
-        }
+        // For DXF files, just show the fallback placeholder
+        showDXFFallback(fileUrl);
     }
     
     function showDXFFallback(fileUrl) {
