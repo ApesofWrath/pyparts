@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .pdf-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-toolbar {
+            background: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pdf-toolbar button {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pdf-toolbar button:hover {
+            background: #666;
+        }
+        .pdf-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+        }
+        .pdf-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .pdf-error h2 {
+            color: #d9534f;
+            margin-bottom: 20px;
+        }
+        .pdf-error p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .pdf-error a {
+            color: #337ab7;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .pdf-error a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-container">
+        <div class="pdf-toolbar">
+            <button onclick="downloadPDF()">Download PDF</button>
+            <button onclick="openInNewTab()">Open in New Tab</button>
+            <button onclick="goBack()">Go Back</button>
+        </div>
+        <iframe id="pdf-iframe" class="pdf-iframe" src=""></iframe>
+    </div>
+
+    <script>
+        // Get PDF file URL from query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const pdfUrl = urlParams.get('file');
+        
+        if (pdfUrl) {
+            // Set iframe source to the PDF file
+            document.getElementById('pdf-iframe').src = pdfUrl;
+        } else {
+            // Show error if no file parameter
+            document.body.innerHTML = `
+                <div class="pdf-error">
+                    <h2>No PDF File Specified</h2>
+                    <p>Please provide a PDF file URL to view.</p>
+                    <a href="javascript:history.back()">Go Back</a>
+                </div>
+            `;
+        }
+        
+        function downloadPDF() {
+            if (pdfUrl) {
+                const link = document.createElement('a');
+                link.href = pdfUrl;
+                link.download = 'document.pdf';
+                link.click();
+            }
+        }
+        
+        function openInNewTab() {
+            if (pdfUrl) {
+                window.open(pdfUrl, '_blank');
+            }
+        }
+        
+        function goBack() {
+            if (window.opener) {
+                window.close();
+            } else {
+                history.back();
+            }
+        }
+        
+        // Handle iframe load errors
+        document.getElementById('pdf-iframe').onerror = function() {
+            document.body.innerHTML = `
+                <div class="pdf-error">
+                    <h2>Error Loading PDF</h2>
+                    <p>The PDF file could not be loaded. This may be due to browser security restrictions or an invalid file URL.</p>
+                    <button onclick="downloadPDF()">Download PDF</button>
+                    <button onclick="openInNewTab()">Open in New Tab</button>
+                    <button onclick="goBack()">Go Back</button>
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>
