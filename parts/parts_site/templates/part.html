@@ -197,9 +197,15 @@
         console.log('File extension:', fileExtension);
         
         // Determine preview type and load accordingly
-        if (['stl', 'step', 'stp', 'iges', 'dxf'].includes(fileExtension)) {
+        if (['stl', 'step', 'stp', 'iges'].includes(fileExtension)) {
             console.log('Loading 3D preview for:', fileExtension);
             load3DPreview(fileUrl, fileExtension);
+        } else if (['dxf'].includes(fileExtension)) {
+            console.log('Loading DXF with fallback placeholder');
+            loadDXFWithCADViewer(fileUrl);
+        } else if (['nc', 'gcode'].includes(fileExtension)) {
+            console.log('Loading G-code preview');
+            loadGCodePreview(fileUrl, fileExtension);
         } else if (['pdf'].includes(fileExtension)) {
             console.log('Loading PDF preview');
             loadPDFPreview(fileUrl);
@@ -369,6 +375,94 @@
         
         // For DXF files, just show the fallback placeholder
         showDXFFallback(fileUrl);
+    }
+    
+    function loadGCodePreview(fileUrl, fileExtension) {
+        console.log('Loading G-code preview:', fileUrl, fileExtension);
+        
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        // Create G-code preview container
+        const gcodeContainer = document.createElement('div');
+        gcodeContainer.id = 'gcode-container';
+        gcodeContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;';
+        
+        // Create G-code icon
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.8;';
+        iconDiv.innerHTML = '⚙️';
+        
+        // Create title
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px; color: #333;';
+        titleDiv.textContent = 'G-Code File';
+        
+        // Create description
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; color: #666; line-height: 1.4;';
+        descDiv.innerHTML = `CNC machining instructions<br/>File type: ${fileExtension.toUpperCase()}`;
+        
+        // Create info section
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'font-size: 14px; color: #888; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0; max-width: 300px;';
+        infoDiv.innerHTML = 'G-code files contain CNC machine instructions.<br/>Preview not available - download to view in CAM software.';
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
+        
+        // Download button
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = fileUrl;
+        downloadBtn.target = '_blank';
+        downloadBtn.className = 'btn btn-primary btn-sm';
+        downloadBtn.style.cssText = 'font-weight: bold;';
+        downloadBtn.innerHTML = '<i class="icon-download"></i> Download G-Code';
+        
+        // Info button
+        const infoBtn = document.createElement('button');
+        infoBtn.className = 'btn btn-outline-secondary btn-sm';
+        infoBtn.style.cssText = 'font-weight: bold;';
+        infoBtn.innerHTML = '<i class="icon-info-sign"></i> View Info';
+        infoBtn.onclick = () => showGCodeInfo();
+        
+        buttonContainer.appendChild(downloadBtn);
+        buttonContainer.appendChild(infoBtn);
+        
+        // Assemble the container
+        gcodeContainer.appendChild(iconDiv);
+        gcodeContainer.appendChild(titleDiv);
+        gcodeContainer.appendChild(descDiv);
+        gcodeContainer.appendChild(infoDiv);
+        gcodeContainer.appendChild(buttonContainer);
+        
+        // Replace the 3D container content with G-code preview
+        if (threejsContainer) {
+            threejsContainer.innerHTML = '';
+            threejsContainer.appendChild(gcodeContainer);
+            threejsContainer.style.display = 'block';
+        }
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        
+        console.log('G-code preview displayed');
+    }
+    
+    function showGCodeInfo() {
+        alert('G-Code File Information:\n\n' +
+              'G-code files contain instructions for CNC machines:\n' +
+              '• Tool paths and movements\n' +
+              '• Spindle speeds and feed rates\n' +
+              '• Tool changes and positioning\n' +
+              '• Safety and setup instructions\n\n' +
+              'To view and edit G-code files:\n' +
+              '• Use CAM software (Fusion 360, Mastercam, etc.)\n' +
+              '• Use G-code viewers (CNC Simulator, etc.)\n' +
+              '• Use text editors for basic viewing\n\n' +
+              'Always verify G-code before running on machines!');
     }
     
     function showDXFFallback(fileUrl) {

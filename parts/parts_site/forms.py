@@ -55,7 +55,7 @@ class PartRevisionForm(forms.ModelForm):
     def clean_drawing(self):
         drawing = self.cleaned_data.get('drawing')
         if drawing:
-            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
+            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.nc', '.gcode']
             file_extension = os.path.splitext(drawing.name)[1].lower()
             if file_extension not in allowed_extensions:
                 raise forms.ValidationError(f"File type {file_extension} not allowed. Allowed types: {', '.join(allowed_extensions)}")
@@ -96,7 +96,7 @@ class PartRevisionCreateForm(forms.ModelForm):
     def clean_drawing(self):
         drawing = self.cleaned_data.get('drawing')
         if drawing:
-            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
+            allowed_extensions = ['.pdf', '.dwg', '.dxf', '.step', '.stp', '.iges', '.stl', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.nc', '.gcode']
             file_extension = os.path.splitext(drawing.name)[1].lower()
             if file_extension not in allowed_extensions:
                 raise forms.ValidationError(f"File type {file_extension} not allowed. Allowed types: {', '.join(allowed_extensions)}")
