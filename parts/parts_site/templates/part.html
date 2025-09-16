@@ -48,8 +48,8 @@
     </div>
     <br />
 
-    <div class="row" style="margin: 0;">
-        <div class="col-md-6" style="padding-right: 15px;">
+    <div class="row" style="margin: 0; display: flex; flex-wrap: wrap; align-items: flex-start;">
+        <div class="col-md-6" style="padding-right: 15px; flex: 0 0 50%; max-width: 50%; min-width: 300px;">
             <table class="table table-striped table-condensed table-bordered" style="width: auto;">
                 <tr>
                   <td><b>Project</b></td>
@@ -119,7 +119,7 @@
               </table>
         </div>
         
-        <div class="col-md-6" style="padding-left: 15px;">
+        <div class="col-md-6" style="padding-left: 15px; flex: 0 0 50%; max-width: 50%; min-width: 300px;">
             {% if revision and revision.drawing %}
             <div class="drawing-preview-panel">
                 <h4>Drawing Preview</h4>
@@ -160,6 +160,19 @@
         </div>
     </div>
 
+
+    <style>
+    @media (max-width: 768px) {
+        .row {
+            flex-direction: column !important;
+        }
+        .col-md-6 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            min-width: auto !important;
+        }
+    }
+    </style>
 
     <script>
     function changeRevision() {
