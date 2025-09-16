@@ -356,10 +356,7 @@
             document.head.appendChild(stlScript);
         } else if (fileExtension === 'dxf') {
             console.log('Loading DXF with dxf-viewer');
-            loadDXFWithCADViewer(fileUrl).catch(error => {
-                console.error('Error loading DXF:', error);
-                showDXFFallback(fileUrl);
-            });
+            loadDXFWithCADViewer(fileUrl);
         } else {
             console.log('Initializing 3D viewer directly');
             init3DViewer(fileUrl, fileExtension);
@@ -367,31 +364,34 @@
     }
 
 
-    async function loadDXFWithCADViewer(fileUrl) {
+    function loadDXFWithCADViewer(fileUrl) {
         console.log('Loading DXF with dxf-viewer:', fileUrl);
         
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewContent = document.getElementById('previewContent');
         const threejsContainer = document.getElementById('threejs-container');
         
+        // Check if dxf-viewer is available
+        if (typeof DXFViewer === 'undefined') {
+            console.error('dxf-viewer library not loaded');
+            showDXFFallback(fileUrl);
+            return;
+        }
+        
+        // Create dxf-viewer container
+        const dxfViewerContainer = document.createElement('div');
+        dxfViewerContainer.id = 'dxfviewer-container';
+        dxfViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
+        
+        // Replace the 3D container content with dxf-viewer
+        if (threejsContainer) {
+            threejsContainer.innerHTML = '';
+            threejsContainer.appendChild(dxfViewerContainer);
+            threejsContainer.style.display = 'block';
+        }
+        
+        // Initialize dxf-viewer
         try {
-            // Dynamically import dxf-viewer as ES module
-            const { DXFViewer } = await import('https://cdn.jsdelivr.net/npm/dxf-viewer@1.0.43/+esm');
-            console.log('dxf-viewer module loaded successfully');
-            
-            // Create dxf-viewer container
-            const dxfViewerContainer = document.createElement('div');
-            dxfViewerContainer.id = 'dxfviewer-container';
-            dxfViewerContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;';
-            
-            // Replace the 3D container content with dxf-viewer
-            if (threejsContainer) {
-                threejsContainer.innerHTML = '';
-                threejsContainer.appendChild(dxfViewerContainer);
-                threejsContainer.style.display = 'block';
-            }
-            
-            // Initialize dxf-viewer
             const dxfViewer = new DXFViewer(dxfViewerContainer, {
                 file: fileUrl,
                 onLoad: function() {
@@ -405,7 +405,7 @@
                 }
             });
         } catch (error) {
-            console.error('Failed to load or initialize dxf-viewer:', error);
+            console.error('Failed to initialize dxf-viewer:', error);
             showDXFFallback(fileUrl);
         }
     }
