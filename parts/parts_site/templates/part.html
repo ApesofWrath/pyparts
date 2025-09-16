@@ -226,29 +226,175 @@
         const fileExtension = fileName.split('.').pop().toLowerCase();
         console.log('File extension:', fileExtension);
         
-        // Determine preview type and load accordingly
-        if (['stl', 'step', 'stp', 'iges'].includes(fileExtension)) {
-            console.log('Loading 3D preview for:', fileExtension);
+        // Only show preview for three.js supported formats (including STL with custom loader)
+        const threejsSupportedFormats = ['stl', 'gltf', 'glb', 'obj', 'fbx', 'dae', '3ds', 'ply', 'svg'];
+        
+        if (threejsSupportedFormats.includes(fileExtension)) {
+            console.log('Loading 3D preview for three.js supported format:', fileExtension);
             load3DPreview(fileUrl, fileExtension);
-        } else if (['dxf'].includes(fileExtension)) {
-            console.log('Loading DXF with fallback placeholder');
-            loadDXFWithCADViewer(fileUrl);
-        } else if (['nc', 'gcode'].includes(fileExtension)) {
-            console.log('Loading G-code preview');
-            loadGCodePreview(fileUrl, fileExtension);
-        } else if (['pdf'].includes(fileExtension)) {
-            console.log('Loading PDF preview');
-            loadPDFPreview(fileUrl);
-        } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(fileExtension)) {
-            console.log('Loading image preview');
-            loadImagePreview(fileUrl);
-        } else if (['dwg'].includes(fileExtension)) {
-            console.log('Loading DWG placeholder');
-            showDWGPlaceholder(fileUrl);
         } else {
-            console.log('Showing preview error for unsupported type');
-            showPreviewError();
+            console.log('File type not supported by three.js, showing download-only message');
+            showDownloadOnlyMessage(fileUrl, fileExtension);
         }
+    }
+
+    function showDownloadOnlyMessage(fileUrl, fileExtension) {
+        console.log('Showing download-only message for:', fileExtension);
+        
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewContent = document.getElementById('previewContent');
+        const threejsContainer = document.getElementById('threejs-container');
+        
+        // Create download-only container
+        const downloadContainer = document.createElement('div');
+        downloadContainer.style.cssText = 'width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;';
+        
+        // Create file type icon
+        const iconDiv = document.createElement('div');
+        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.9;';
+        
+        // Set appropriate icon based on file type
+        if (['pdf'].includes(fileExtension)) {
+            iconDiv.innerHTML = '📄';
+        } else if (['dwg', 'dxf'].includes(fileExtension)) {
+            iconDiv.innerHTML = '🏗️';
+        } else if (['step', 'stp', 'iges'].includes(fileExtension)) {
+            iconDiv.innerHTML = '⚙️';
+        } else if (['nc', 'gcode'].includes(fileExtension)) {
+            iconDiv.innerHTML = '🔧';
+        } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(fileExtension)) {
+            iconDiv.innerHTML = '🖼️';
+        } else {
+            iconDiv.innerHTML = '📁';
+        }
+        
+        // Create title
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px;';
+        titleDiv.textContent = fileExtension.toUpperCase() + ' File';
+        
+        // Create description
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; opacity: 0.9; line-height: 1.4;';
+        descDiv.innerHTML = 'This file type is not supported for web preview.<br/>Download the file to view in appropriate software.';
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
+        
+        // Download button
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = fileUrl;
+        downloadBtn.target = '_blank';
+        downloadBtn.className = 'btn btn-light btn-sm';
+        downloadBtn.style.cssText = 'color: #667eea; font-weight: bold;';
+        downloadBtn.innerHTML = '<i class="icon-download"></i> Download ' + fileExtension.toUpperCase();
+        
+        // Info button
+        const infoBtn = document.createElement('button');
+        infoBtn.className = 'btn btn-outline-light btn-sm';
+        infoBtn.style.cssText = 'border: 2px solid white; color: white; font-weight: bold;';
+        infoBtn.innerHTML = '<i class="icon-info-sign"></i> View Info';
+        infoBtn.onclick = () => showFileTypeInfo(fileExtension);
+        
+        buttonContainer.appendChild(downloadBtn);
+        buttonContainer.appendChild(infoBtn);
+        
+        // Assemble the container
+        downloadContainer.appendChild(iconDiv);
+        downloadContainer.appendChild(titleDiv);
+        downloadContainer.appendChild(descDiv);
+        downloadContainer.appendChild(buttonContainer);
+        
+        // Replace the 3D container content with download-only message
+        if (threejsContainer) {
+            threejsContainer.innerHTML = '';
+            threejsContainer.appendChild(downloadContainer);
+            threejsContainer.style.display = 'block';
+        }
+        
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (previewContent) previewContent.style.display = 'block';
+        
+        console.log('Download-only message displayed for:', fileExtension);
+    }
+    
+    function showFileTypeInfo(fileExtension) {
+        let message = '';
+        
+        switch(fileExtension) {
+            case 'pdf':
+                message = 'PDF Document Information:\n\n' +
+                         'PDF files contain technical drawings and documentation:\n' +
+                         '• Engineering drawings and blueprints\n' +
+                         '• Technical specifications\n' +
+                         '• Assembly instructions\n\n' +
+                         'To view: Download and open in Adobe Reader or browser.';
+                break;
+            case 'dwg':
+                message = 'DWG File Information:\n\n' +
+                         'DWG files are AutoCAD drawing files:\n' +
+                         '• 2D and 3D CAD drawings\n' +
+                         '• Engineering and architectural plans\n' +
+                         '• Technical documentation\n\n' +
+                         'To view: Use AutoCAD, DraftSight, or other CAD software.';
+                break;
+            case 'dxf':
+                message = 'DXF File Information:\n\n' +
+                         'DXF files are CAD data exchange format:\n' +
+                         '• 2D and 3D drawing data\n' +
+                         '• Compatible with most CAD software\n' +
+                         '• Industry standard format\n\n' +
+                         'To view: Use AutoCAD, FreeCAD, or other CAD software.';
+                break;
+            case 'step':
+            case 'stp':
+                message = 'STEP File Information:\n\n' +
+                         'STEP files are 3D CAD exchange format:\n' +
+                         '• 3D solid models and assemblies\n' +
+                         '• Industry standard for CAD data exchange\n' +
+                         '• Used for manufacturing and engineering\n\n' +
+                         'To view: Use CAD software like SolidWorks, Fusion 360, or FreeCAD.';
+                break;
+            case 'iges':
+                message = 'IGES File Information:\n\n' +
+                         'IGES files are CAD data exchange format:\n' +
+                         '• 2D and 3D geometry data\n' +
+                         '• Legacy format still widely used\n' +
+                         '• Engineering and manufacturing data\n\n' +
+                         'To view: Use CAD software like SolidWorks, Fusion 360, or FreeCAD.';
+                break;
+            case 'nc':
+            case 'gcode':
+                message = 'G-Code File Information:\n\n' +
+                         'G-code files contain CNC machine instructions:\n' +
+                         '• Tool paths and movements\n' +
+                         '• Spindle speeds and feed rates\n' +
+                         '• Tool changes and positioning\n\n' +
+                         'To view: Use CAM software or G-code viewers.';
+                break;
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'bmp':
+            case 'tiff':
+                message = 'Image File Information:\n\n' +
+                         'Image files contain visual data:\n' +
+                         '• Photographs and graphics\n' +
+                         '• Technical drawings and diagrams\n' +
+                         '• Documentation and reference images\n\n' +
+                         'To view: Use any image viewer or web browser.';
+                break;
+            default:
+                message = 'File Type Information:\n\n' +
+                         'This file type requires specialized software to view:\n' +
+                         '• Download the file to your computer\n' +
+                         '• Use appropriate software for the file type\n' +
+                         '• Check file documentation for recommended viewers';
+        }
+        
+        alert(message);
     }
 
     function createPlaceholderGeometry(scene, fileType, color) {
@@ -284,82 +430,18 @@
         if (placeholderThreejsContainer) placeholderThreejsContainer.style.display = 'block';
     }
 
-    function showDWGPlaceholder(fileUrl) {
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let imageContainer = document.getElementById('image-container');
-        
-        // Create a placeholder for DWG files
-        const placeholderDiv = document.createElement('div');
-        placeholderDiv.style.cssText = 'width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;';
-        
-        const iconDiv = document.createElement('div');
-        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.9;';
-        iconDiv.innerHTML = '🏗️';
-        
-        const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px;';
-        titleDiv.textContent = 'DWG File';
-        
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; opacity: 0.9; line-height: 1.4;';
-        descDiv.innerHTML = 'DWG files require AutoCAD or compatible software.<br/>Try converting to DXF for web preview.';
-        
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
-        
-        const downloadBtn = document.createElement('a');
-        downloadBtn.href = fileUrl;
-        downloadBtn.target = '_blank';
-        downloadBtn.className = 'btn btn-light btn-sm';
-        downloadBtn.style.cssText = 'color: #667eea; font-weight: bold;';
-        downloadBtn.innerHTML = '<i class="icon-download"></i> Download DWG';
-        
-        const convertBtn = document.createElement('button');
-        convertBtn.className = 'btn btn-outline-light btn-sm';
-        convertBtn.style.cssText = 'border: 2px solid white; color: white; font-weight: bold;';
-        convertBtn.innerHTML = '<i class="icon-refresh"></i> Convert to DXF';
-        convertBtn.onclick = () => showConversionInfo();
-        
-        buttonContainer.appendChild(downloadBtn);
-        buttonContainer.appendChild(convertBtn);
-        
-        placeholderDiv.appendChild(iconDiv);
-        placeholderDiv.appendChild(titleDiv);
-        placeholderDiv.appendChild(descDiv);
-        placeholderDiv.appendChild(buttonContainer);
-        
-        imageContainer.innerHTML = '';
-        imageContainer.appendChild(placeholderDiv);
-        
-        loadingSpinner.style.display = 'none';
-        previewContent.style.display = 'block';
-        imageContainer.style.display = 'block';
-    }
-
-    function showConversionInfo() {
-        alert('To convert DWG to DXF:\n\n' +
-              '1. Open the DWG file in AutoCAD\n' +
-              '2. Go to File > Save As\n' +
-              '3. Change file type to "AutoCAD DXF (*.dxf)"\n' +
-              '4. Save and upload the DXF file for web preview\n\n' +
-              'Alternatively, use online converters like:\n' +
-              '• Convertio.co\n' +
-              '• CloudConvert.com\n' +
-              '• Zamzar.com');
-    }
 
     function load3DPreview(fileUrl, fileExtension) {
         console.log('load3DPreview called with:', fileUrl, fileExtension);
         
-        // Load Three.js and STLLoader dynamically
+        // Load Three.js dynamically
         if (!window.THREE) {
             console.log('THREE.js not loaded, loading it now...');
             const threeScript = document.createElement('script');
             threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
             threeScript.onload = () => {
                 console.log('THREE.js loaded successfully');
-                loadSTLLoader(fileUrl, fileExtension);
+                loadThreeJSLoader(fileUrl, fileExtension);
             };
             threeScript.onerror = (error) => {
                 console.error('Failed to load THREE.js:', error);
@@ -368,12 +450,12 @@
             document.head.appendChild(threeScript);
         } else {
             console.log('THREE.js already loaded');
-            loadSTLLoader(fileUrl, fileExtension);
+            loadThreeJSLoader(fileUrl, fileExtension);
         }
     }
 
-    function loadSTLLoader(fileUrl, fileExtension) {
-        console.log('loadSTLLoader called with:', fileUrl, fileExtension);
+    function loadThreeJSLoader(fileUrl, fileExtension) {
+        console.log('loadThreeJSLoader called with:', fileUrl, fileExtension);
         
         // Load STLLoader for STL files
         if (fileExtension === 'stl' && !window.STLLoader) {
@@ -390,181 +472,13 @@
                 init3DViewer(fileUrl, fileExtension);
             };
             document.head.appendChild(stlScript);
-        } else if (fileExtension === 'dxf') {
-            console.log('Loading DXF with fallback placeholder');
-            loadDXFWithCADViewer(fileUrl);
         } else {
-            console.log('Initializing 3D viewer directly');
+            console.log('Initializing 3D viewer for three.js supported format:', fileExtension);
             init3DViewer(fileUrl, fileExtension);
         }
     }
 
 
-    function loadDXFWithCADViewer(fileUrl) {
-        console.log('Loading DXF with fallback placeholder:', fileUrl);
-        
-        // For DXF files, just show the fallback placeholder
-        showDXFFallback(fileUrl);
-    }
-    
-    function loadGCodePreview(fileUrl, fileExtension) {
-        console.log('Loading G-code preview:', fileUrl, fileExtension);
-        
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Create G-code preview container
-        const gcodeContainer = document.createElement('div');
-        gcodeContainer.id = 'gcode-container';
-        gcodeContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;';
-        
-        // Create G-code icon
-        const iconDiv = document.createElement('div');
-        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.8;';
-        iconDiv.innerHTML = '⚙️';
-        
-        // Create title
-        const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px; color: #333;';
-        titleDiv.textContent = 'G-Code File';
-        
-        // Create description
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; color: #666; line-height: 1.4;';
-        descDiv.innerHTML = `CNC machining instructions<br/>File type: ${fileExtension.toUpperCase()}`;
-        
-        // Create info section
-        const infoDiv = document.createElement('div');
-        infoDiv.style.cssText = 'font-size: 14px; color: #888; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0; max-width: 300px;';
-        infoDiv.innerHTML = 'G-code files contain CNC machine instructions.<br/>Preview not available - download to view in CAM software.';
-        
-        // Create button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
-        
-        // Download button
-        const downloadBtn = document.createElement('a');
-        downloadBtn.href = fileUrl;
-        downloadBtn.target = '_blank';
-        downloadBtn.className = 'btn btn-primary btn-sm';
-        downloadBtn.style.cssText = 'font-weight: bold;';
-        downloadBtn.innerHTML = '<i class="icon-download"></i> Download G-Code';
-        
-        // Info button
-        const infoBtn = document.createElement('button');
-        infoBtn.className = 'btn btn-outline-secondary btn-sm';
-        infoBtn.style.cssText = 'font-weight: bold;';
-        infoBtn.innerHTML = '<i class="icon-info-sign"></i> View Info';
-        infoBtn.onclick = () => showGCodeInfo();
-        
-        buttonContainer.appendChild(downloadBtn);
-        buttonContainer.appendChild(infoBtn);
-        
-        // Assemble the container
-        gcodeContainer.appendChild(iconDiv);
-        gcodeContainer.appendChild(titleDiv);
-        gcodeContainer.appendChild(descDiv);
-        gcodeContainer.appendChild(infoDiv);
-        gcodeContainer.appendChild(buttonContainer);
-        
-        // Replace the 3D container content with G-code preview
-        if (threejsContainer) {
-            threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(gcodeContainer);
-            threejsContainer.style.display = 'block';
-        }
-        
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (previewContent) previewContent.style.display = 'block';
-        
-        console.log('G-code preview displayed');
-    }
-    
-    function showGCodeInfo() {
-        alert('G-Code File Information:\n\n' +
-              'G-code files contain instructions for CNC machines:\n' +
-              '• Tool paths and movements\n' +
-              '• Spindle speeds and feed rates\n' +
-              '• Tool changes and positioning\n' +
-              '• Safety and setup instructions\n\n' +
-              'To view and edit G-code files:\n' +
-              '• Use CAM software (Fusion 360, Mastercam, etc.)\n' +
-              '• Use G-code viewers (CNC Simulator, etc.)\n' +
-              '• Use text editors for basic viewing\n\n' +
-              'Always verify G-code before running on machines!');
-    }
-    
-    function showDXFFallback(fileUrl) {
-        console.log('Showing DXF fallback for:', fileUrl);
-        
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Create DXF fallback placeholder
-        const dxfPlaceholder = document.createElement('div');
-        dxfPlaceholder.style.cssText = 'width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; padding: 20px; text-align: center;';
-        
-        const iconDiv = document.createElement('div');
-        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.9;';
-        iconDiv.innerHTML = '📐';
-        
-        const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px;';
-        titleDiv.textContent = 'DXF Drawing';
-        
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; opacity: 0.9; line-height: 1.4;';
-        descDiv.innerHTML = 'DXF files require CAD software for full viewing.<br/>Download the file to view in AutoCAD or compatible software.';
-        
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
-        
-        const downloadBtn = document.createElement('a');
-        downloadBtn.href = fileUrl;
-        downloadBtn.target = '_blank';
-        downloadBtn.className = 'btn btn-light btn-sm';
-        downloadBtn.style.cssText = 'color: #667eea; font-weight: bold;';
-        downloadBtn.innerHTML = '<i class="icon-download"></i> Download DXF';
-        
-        const convertBtn = document.createElement('button');
-        convertBtn.className = 'btn btn-outline-light btn-sm';
-        convertBtn.style.cssText = 'border: 2px solid white; color: white; font-weight: bold;';
-        convertBtn.innerHTML = '<i class="icon-refresh"></i> Convert to PDF';
-        convertBtn.onclick = () => showDXFConversionInfo();
-        
-        buttonContainer.appendChild(downloadBtn);
-        buttonContainer.appendChild(convertBtn);
-        
-        dxfPlaceholder.appendChild(iconDiv);
-        dxfPlaceholder.appendChild(titleDiv);
-        dxfPlaceholder.appendChild(descDiv);
-        dxfPlaceholder.appendChild(buttonContainer);
-        
-        // Replace the 3D container content with DXF placeholder
-        if (threejsContainer) {
-            threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(dxfPlaceholder);
-            threejsContainer.style.display = 'block';
-        }
-        
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (previewContent) previewContent.style.display = 'block';
-        
-        console.log('DXF fallback displayed');
-    }
-    
-    function showDXFConversionInfo() {
-        alert('To convert DXF to PDF for web viewing:\n\n' +
-              '1. Open the DXF file in AutoCAD\n' +
-              '2. Go to File > Export > PDF\n' +
-              '3. Save and upload the PDF file for web preview\n\n' +
-              'Alternatively, use online converters like:\n' +
-              '• Convertio.co\n' +
-              '• CloudConvert.com\n' +
-              '• Zamzar.com');
-    }
 
 
 
@@ -665,15 +579,18 @@
                 // Fallback if STLLoader not available
                 createPlaceholderGeometry(scene, 'STL', 0x00ff00);
             }
-        } else if (fileExtension === 'dxf') {
-            // DXF files - this should be handled by DXF viewer, but fallback to placeholder
-            createPlaceholderGeometry(scene, 'DXF', 0xff6600);
-        } else if (['step', 'stp', 'iges'].includes(fileExtension)) {
-            // Other 3D formats - show placeholder
-            createPlaceholderGeometry(scene, fileExtension.toUpperCase(), 0x0066cc);
         } else {
-            // Default placeholder
-            createPlaceholderGeometry(scene, '3D', 0x666666);
+            // For other three.js supported formats, show placeholder with appropriate color
+            let color = 0x666666;
+            if (fileExtension === 'gltf' || fileExtension === 'glb') color = 0x00ccff;
+            else if (fileExtension === 'obj') color = 0xff6600;
+            else if (fileExtension === 'fbx') color = 0xcc00ff;
+            else if (fileExtension === 'dae') color = 0xffcc00;
+            else if (fileExtension === '3ds') color = 0x00ffcc;
+            else if (fileExtension === 'ply') color = 0xff0066;
+            else if (fileExtension === 'svg') color = 0x66ff00;
+            
+            createPlaceholderGeometry(scene, fileExtension.toUpperCase(), color);
         }
 
         camera.position.z = 3;
@@ -725,191 +642,6 @@
         }
     }
 
-    function loadPDFPreview(fileUrl) {
-        console.log('loadPDFPreview called with:', fileUrl);
-        
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Create PDF viewer container
-        const pdfContainer = document.createElement('div');
-        pdfContainer.id = 'pdf-viewer-container';
-        pdfContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; position: relative;';
-        
-        // Create iframe for self-hosted PDF viewer
-        const pdfIframe = document.createElement('iframe');
-        pdfIframe.id = 'pdf-iframe';
-        pdfIframe.style.cssText = 'width: 100%; height: 100%; border: none; border-radius: 4px;';
-        
-        // Use self-hosted PDF viewer
-        const viewerUrl = '{% static "pdfjs/viewer.html" %}?file=' + encodeURIComponent(fileUrl);
-        pdfIframe.src = viewerUrl;
-        
-        // Add error handling for iframe
-        pdfIframe.onerror = function() {
-            console.log('PDF viewer failed to load, showing fallback');
-            showPDFFallback(fileUrl);
-        };
-        
-        // Add load event handler
-        pdfIframe.onload = function() {
-            console.log('PDF viewer loaded successfully');
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (previewContent) previewContent.style.display = 'block';
-        };
-        
-        // Add timeout fallback
-        setTimeout(() => {
-            if (loadingSpinner && loadingSpinner.style.display !== 'none') {
-                console.log('PDF viewer timeout, showing fallback');
-                showPDFFallback(fileUrl);
-            }
-        }, 10000); // 10 second timeout
-        
-        pdfContainer.appendChild(pdfIframe);
-        
-        // Replace the 3D container content with PDF viewer
-        if (threejsContainer) {
-            threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(pdfContainer);
-            threejsContainer.style.display = 'block';
-        }
-        
-        console.log('Self-hosted PDF viewer iframe created');
-    }
-    
-    function showPDFFallback(fileUrl) {
-        console.log('Showing PDF fallback for:', fileUrl);
-        
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const previewContent = document.getElementById('previewContent');
-        const threejsContainer = document.getElementById('threejs-container');
-        
-        // Create PDF fallback container
-        const pdfContainer = document.createElement('div');
-        pdfContainer.id = 'pdf-fallback-container';
-        pdfContainer.style.cssText = 'width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;';
-        
-        // Create PDF icon
-        const iconDiv = document.createElement('div');
-        iconDiv.style.cssText = 'font-size: 64px; margin-bottom: 20px; opacity: 0.8;';
-        iconDiv.innerHTML = '📄';
-        
-        // Create title
-        const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 12px; color: #333;';
-        titleDiv.textContent = 'PDF Document';
-        
-        // Create description
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = 'font-size: 16px; margin-bottom: 20px; color: #666; line-height: 1.4;';
-        descDiv.innerHTML = 'Portable Document Format<br/>Technical drawings and documentation';
-        
-        // Create info section
-        const infoDiv = document.createElement('div');
-        infoDiv.style.cssText = 'font-size: 14px; color: #888; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0; max-width: 300px;';
-        infoDiv.innerHTML = 'PDF files contain technical drawings and documentation.<br/>Download to view in your preferred PDF viewer.';
-        
-        // Create button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;';
-        
-        // Download button
-        const downloadBtn = document.createElement('a');
-        downloadBtn.href = fileUrl;
-        downloadBtn.target = '_blank';
-        downloadBtn.className = 'btn btn-primary btn-sm';
-        downloadBtn.style.cssText = 'font-weight: bold;';
-        downloadBtn.innerHTML = '<i class="icon-download"></i> Download PDF';
-        
-        // View button
-        const viewBtn = document.createElement('a');
-        viewBtn.href = fileUrl;
-        viewBtn.target = '_blank';
-        viewBtn.className = 'btn btn-outline-primary btn-sm';
-        viewBtn.style.cssText = 'font-weight: bold;';
-        viewBtn.innerHTML = '<i class="icon-eye-open"></i> Open in New Tab';
-        
-        // Info button
-        const infoBtn = document.createElement('button');
-        infoBtn.className = 'btn btn-outline-secondary btn-sm';
-        infoBtn.style.cssText = 'font-weight: bold;';
-        infoBtn.innerHTML = '<i class="icon-info-sign"></i> View Info';
-        infoBtn.onclick = () => showPDFInfo();
-        
-        buttonContainer.appendChild(downloadBtn);
-        buttonContainer.appendChild(viewBtn);
-        buttonContainer.appendChild(infoBtn);
-        
-        // Assemble the container
-        pdfContainer.appendChild(iconDiv);
-        pdfContainer.appendChild(titleDiv);
-        pdfContainer.appendChild(descDiv);
-        pdfContainer.appendChild(infoDiv);
-        pdfContainer.appendChild(buttonContainer);
-        
-        // Replace the 3D container content with PDF fallback
-        if (threejsContainer) {
-            threejsContainer.innerHTML = '';
-            threejsContainer.appendChild(pdfContainer);
-            threejsContainer.style.display = 'block';
-        }
-        
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (previewContent) previewContent.style.display = 'block';
-        
-        console.log('PDF fallback displayed');
-    }
-    
-    function showPDFInfo() {
-        alert('PDF Document Information:\n\n' +
-              'PDF files contain technical drawings and documentation:\n' +
-              '• Engineering drawings and blueprints\n' +
-              '• Technical specifications\n' +
-              '• Assembly instructions\n' +
-              '• Quality control documents\n\n' +
-              'To view PDF files:\n' +
-              '• Use built-in browser PDF viewer\n' +
-              '• Download and open in Adobe Reader\n' +
-              '• Use online PDF viewers\n' +
-              '• Open in CAD software that supports PDF import\n\n' +
-              'PDF files are widely supported across all platforms!');
-    }
-
-    function loadImagePreview(fileUrl) {
-        console.log('loadImagePreview called with:', fileUrl);
-        
-        let loadingSpinner = document.getElementById('loadingSpinner');
-        let previewContent = document.getElementById('previewContent');
-        let imageContainer = document.getElementById('image-container');
-        let previewImage = document.getElementById('preview-image');
-
-        console.log('Image preview elements:', {
-            loadingSpinner: !!loadingSpinner,
-            previewContent: !!previewContent,
-            imageContainer: !!imageContainer,
-            previewImage: !!previewImage
-        });
-
-        if (!previewImage) {
-            console.error('preview-image element not found');
-            showPreviewError();
-            return;
-        }
-
-        previewImage.src = fileUrl;
-        previewImage.onload = function() {
-            console.log('Image loaded successfully');
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (previewContent) previewContent.style.display = 'block';
-            if (imageContainer) imageContainer.style.display = 'block';
-        };
-        previewImage.onerror = function(error) {
-            console.error('Image failed to load:', error);
-            showPreviewError();
-        };
-    }
 
     function showPreviewError() {
         console.log('showPreviewError called');
