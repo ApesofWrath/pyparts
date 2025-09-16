@@ -371,8 +371,9 @@
         const previewContent = document.getElementById('previewContent');
         const threejsContainer = document.getElementById('threejs-container');
         
-        // Check if dxf-viewer is available
-        if (typeof DXFViewer === 'undefined') {
+        // Check if dxf-viewer is available (try different possible class names)
+        let DxfViewerClass = window.DXFViewer || window.DxfViewer || window.dxfViewer;
+        if (!DxfViewerClass) {
             console.error('dxf-viewer library not loaded');
             showDXFFallback(fileUrl);
             return;
@@ -392,7 +393,7 @@
         
         // Initialize dxf-viewer
         try {
-            const dxfViewer = new DXFViewer(dxfViewerContainer, {
+            const dxfViewer = new DxfViewerClass(dxfViewerContainer, {
                 file: fileUrl,
                 onLoad: function() {
                     console.log('DXF loaded successfully with dxf-viewer');
