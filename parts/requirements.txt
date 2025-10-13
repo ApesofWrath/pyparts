@@ -8,8 +8,12 @@ asgiref==3.8.1
     # via django
 certifi==2024.7.4
     # via requests
+cffi==2.0.0
+    # via cryptography
 charset-normalizer==3.3.2
     # via requests
+cryptography==46.0.2
+    # via pyjwt
 django==5.1
     # via
     #   -r requirements.in
@@ -27,8 +31,12 @@ idna==3.7
     # via requests
 oauthlib==3.2.2
     # via requests-oauthlib
-psycopg2-binary==2.9.9
+packaging==25.0
+    # via gunicorn
+psycopg2-binary==2.9.11
     # via -r requirements.in
+pycparser==2.23
+    # via cffi
 pyjwt[crypto]==2.9.0
     # via django-allauth
 requests==2.32.3
