@@ -81,6 +81,12 @@ class OnshapeClient:
             logger.info(f"Response body: {response.text[:500]}")
             
             response.raise_for_status()
+            
+            # Handle empty responses (e.g., from DELETE)
+            if not response.text or response.text.strip() == "":
+                logger.info("Empty response body (success)")
+                return {}
+            
             result = response.json()
             logger.info(f"Parsed response: {json.dumps(result, indent=2)[:500]}")
             return result
@@ -136,7 +142,14 @@ class OnshapeClient:
         return doc
 
     def move_document_to_folder(self, document_id, folder_id):
-        return self._request("POST", f"documents/{document_id}/move", body={"targetFolderId": folder_id})
+        """Move a document to a folder. Returns True on success, False on failure."""
+        # Use the globaltreenodes endpoint (undocumented but working)
+        result = self._request("POST", f"globaltreenodes/folder/{folder_id}", body={"documentId": document_id})
+        if result is None:
+            logger.warning(f"Failed to move document {document_id} to folder {folder_id}")
+            return False
+        logger.info(f"Successfully moved document {document_id} to folder {folder_id}")
+        return True
 
     def get_document_workspace(self, document_id):
         """Gets the default workspace of a document."""
