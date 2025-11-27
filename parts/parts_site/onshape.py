@@ -191,3 +191,12 @@ class OnshapeClient:
         """List elements in a document."""
         # GET /api/documents/d/{did}/w/{wid}/elements
         return self._request("GET", f"documents/d/{document_id}/w/{workspace_id}/elements")
+
+    def create_version(self, document_id, name, description="Created by Parts Website"):
+        """Creates a version for the document."""
+        # POST /api/documents/{did}/versions
+        body = {
+            "name": name,
+            "description": description
+        }
+        return self._request("POST", f"documents/{document_id}/versions", body=body)

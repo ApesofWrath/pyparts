@@ -324,6 +324,16 @@ def newpart(request, project_id, assembly_id = None):
                 status=PartStatus.NEW
             )
             
+            # Create Onshape Version for initial revision
+            try:
+                if current_assembly.onshape_document_id:
+                    client = OnshapeClient()
+                    version_name = f"Rev A - {part.name}"
+                    logger.info(f"Creating Onshape version for initial revision: {version_name}")
+                    client.create_version(current_assembly.onshape_document_id, version_name, description=f"Initial revision for {part.part_number}")
+            except Exception as e:
+                logger.error(f"Failed to create Onshape version for initial revision: {e}")
+            
             return HttpResponseRedirect(reverse("project",args=(project_id,)))
     else:
         initial_values = {}
@@ -456,6 +466,19 @@ def newrevision(request, project_id, assembly_id, part_id):
             revision = form.save(commit=False)
             revision.part = current_part
             revision.save()
+            
+            # Create Onshape Version for new revision
+            try:
+                # Find the parent assembly to get the document ID
+                # Part -> Assembly
+                if current_part.assembly.onshape_document_id:
+                    client = OnshapeClient()
+                    version_name = f"Rev {revision.revision_number} - {current_part.name}"
+                    logger.info(f"Creating Onshape version for revision: {version_name}")
+                    client.create_version(current_part.assembly.onshape_document_id, version_name, description=f"Revision {revision.revision_number} for {current_part.part_number}")
+            except Exception as e:
+                logger.error(f"Failed to create Onshape version for revision: {e}")
+                
             return HttpResponseRedirect(reverse("part", args=(project_id, assembly_id, part_id)))
     else:
         # Set default revision number
