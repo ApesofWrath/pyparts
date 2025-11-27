@@ -200,3 +200,38 @@ class OnshapeClient:
             "description": description
         }
         return self._request("POST", f"documents/{document_id}/versions", body=body)
+
+    def create_part_studio_export(self, document_id, workspace_id, element_id, format_name="STEP", webhook_callback_url=None):
+        """Initiates an export of a Part Studio."""
+        # POST /api/partstudios/d/{did}/w/{wid}/e/{eid}/translations
+        body = {
+            "formatName": format_name,
+            "storeInDocument": False
+        }
+        if webhook_callback_url:
+             # Onshape expects 'destinationSettings' for some advanced config, 
+             # but standard webhooks are registered separately.
+             # However, some API endpoints allow 'linkDocumentId' etc.
+             # The general webhook system is preferred. 
+             # But wait, if we can't attach a webhook to THIS specific request, 
+             # we must rely on a pre-registered webhook.
+             pass
+
+        return self._request("POST", f"partstudios/d/{document_id}/w/{workspace_id}/e/{element_id}/translations", body=body)
+    
+    def get_translation_status(self, translation_id):
+        """Checks status of a translation."""
+        # GET /api/translations/{tid}
+        return self._request("GET", f"translations/{translation_id}")
+
+    def register_webhook(self, url, events=["onshape.model.translation.complete"]):
+        """Registers a webhook."""
+        # POST /api/webhooks
+        body = {
+            "url": url,
+            "events": events,
+            "options": {
+                "collapseEvents": False
+            }
+        }
+        return self._request("POST", "webhooks", body=body)

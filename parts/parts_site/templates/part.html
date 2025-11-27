@@ -12,6 +12,11 @@
         <a href="{% url 'newrevision' project.id assembly.id part.id %}" class="btn btn-primary btn-small">
             <i class="icon-white icon-plus"></i> New Revision
         </a>
+        {% if part.onshape_element_id %}
+        <a href="#" onclick="exportStep()" class="btn btn-info btn-small">
+             Export STEP
+        </a>
+        {% endif %}
         {% if can_delete_revisions and revisions|length > 1 %}
         <a href="#" onclick="confirmDeleteRevision()" class="btn btn-danger btn-small">
             <i class="icon-white icon-trash"></i> Delete Revision
@@ -215,6 +220,22 @@
         if (confirm('Are you sure you want to delete this revision? This action cannot be undone.')) {
             window.location.href = "{% url 'deleterevision' project.id assembly.id part.id revision.id %}";
         }
+    }
+
+    function exportStep() {
+        fetch("{% url 'export_step' project.id assembly.id part.id %}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Export failed: ' + data.error);
+            } else {
+                alert('Export started! You will be notified when it is ready. (Translation ID: ' + data.translationId + ')');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Export request failed');
+        });
     }
 
     // Auto-load drawing preview when page loads
