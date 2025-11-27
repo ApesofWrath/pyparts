@@ -131,13 +131,15 @@ def newproject(request):
                                     tla.save()
                                     logger.info(f"Saved TLA with element_id: {tla.onshape_element_id}")
                                     
-                                    # 4. Delete default Part Studio 1
-                                    logger.info("Step 5: Deleting default Part Studio")
+                                    # 4. Delete default elements (Part Studio 1 and Assembly 1)
+                                    logger.info("Step 5: Deleting default elements")
                                     elements = client.get_elements(doc['id'], workspace['id'])
                                     if elements:
                                         for e in elements:
-                                            if e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO":
-                                                logger.info(f"Deleting element: {e.get('id')}")
+                                            # Delete default Part Studio 1 and Assembly 1
+                                            if ((e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO") or
+                                                (e.get('name') == "Assembly 1" and e.get('elementType') == "ASSEMBLY")):
+                                                logger.info(f"Deleting default element: {e.get('name')} ({e.get('id')})")
                                                 client.delete_element(doc['id'], workspace['id'], e['id'])
                                 else:
                                     logger.warning("Assembly tab creation returned None")
@@ -244,13 +246,15 @@ def newassembly(request, project_id, assembly_id = None):
                                     assembly.save()
                                     logger.info(f"Saved assembly with element_id: {assembly.onshape_element_id}")
                                     
-                                    # 4. Delete default Part Studio 1
-                                    logger.info("Step 5: Deleting default Part Studio")
+                                    # 4. Delete default elements (Part Studio 1 and Assembly 1)
+                                    logger.info("Step 5: Deleting default elements")
                                     elements = client.get_elements(doc['id'], workspace['id'])
                                     if elements:
                                         for e in elements:
-                                            if e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO":
-                                                logger.info(f"Deleting element: {e.get('id')}")
+                                            # Delete default Part Studio 1 and Assembly 1
+                                            if ((e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO") or
+                                                (e.get('name') == "Assembly 1" and e.get('elementType') == "ASSEMBLY")):
+                                                logger.info(f"Deleting default element: {e.get('name')} ({e.get('id')})")
                                                 client.delete_element(doc['id'], workspace['id'], e['id'])
                                 else:
                                     logger.warning("Assembly tab creation returned None")
