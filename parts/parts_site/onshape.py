@@ -121,26 +121,16 @@ class OnshapeClient:
         body = {
             "name": name,
             "description": "Created by Parts Website",
-            "isPublic": False,
-            "ownerType": 1 # 0: User, 1: Company? Defaulting to User if not specified usually works or depends on auth.
-                           # Actually, let's omit ownerType and let it default to current user.
+            "isPublic": False
         }
-        if folder_id:
-            body["ownerId"] = folder_id # This might be wrong. Folders are not owners.
-            # To create in a folder, we usually need to move it after creation or specify parentId?
-            # API docs say: POST /api/documents
-            # Body: { name, ownerId, ... }
-            # There is no parentId in create document usually.
-            # We might need to create then move.
-            pass
-            
-        # Let's try creating first.
+        
+        # Create the document first
+        logger.info(f"Creating document: {name}")
         doc = self._request("POST", "documents", body=body)
         
         if doc and folder_id:
-            # Move to folder
-            # POST /api/documents/{did}/move
-            # Body: { targetFolderId: ... }
+            # Move to folder after creation
+            logger.info(f"Moving document {doc.get('id')} to folder {folder_id}")
             self.move_document_to_folder(doc['id'], folder_id)
             
         return doc
