@@ -65,6 +65,10 @@ class OnshapeClient:
         url = f"{self.base_url}/api/{endpoint}"
         headers = self._make_auth_headers(method, f"/api/{endpoint}", query, {"Content-Type": "application/json"})
         
+        logger.info(f"Onshape API {method} {url}")
+        if body:
+            logger.info(f"Request body: {json.dumps(body, indent=2)}")
+        
         try:
             response = requests.request(
                 method,
@@ -73,11 +77,17 @@ class OnshapeClient:
                 params=query,
                 json=body
             )
+            logger.info(f"Response status: {response.status_code}")
+            logger.info(f"Response body: {response.text[:500]}")
+            
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            logger.info(f"Parsed response: {json.dumps(result, indent=2)[:500]}")
+            return result
         except requests.exceptions.RequestException as e:
             logger.error(f"Onshape API request failed: {e}")
             if e.response is not None:
+                logger.error(f"Response status: {e.response.status_code}")
                 logger.error(f"Response: {e.response.text}")
             return None
 

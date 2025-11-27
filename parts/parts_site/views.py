@@ -99,35 +99,56 @@ def newproject(request):
             # Onshape Integration
             if form.cleaned_data.get('create_onshape_project'):
                 try:
+                    logger.info(f"Creating Onshape project for: {project.name}")
                     client = OnshapeClient()
                     # 1. Create Folder
+                    logger.info("Step 1: Creating folder")
                     folder = client.create_folder(project.name)
                     if folder:
+                        logger.info(f"Folder created with ID: {folder.get('id')}")
                         project.onshape_folder_id = folder['id']
                         project.save()
+                        logger.info(f"Saved project with folder_id: {project.onshape_folder_id}")
                         
                         # 2. Create Document in Folder
+                        logger.info("Step 2: Creating document")
                         doc = client.create_document(tla.part_number, folder_id=folder['id'])
                         if doc:
+                            logger.info(f"Document created with ID: {doc.get('id')}")
                             tla.onshape_document_id = doc['id']
                             tla.onshape_folder_id = folder['id'] # TLA lives in Project Folder
                             
                             # 3. Create Assembly Tab
+                            logger.info("Step 3: Getting workspace")
                             workspace = client.get_document_workspace(doc['id'])
                             if workspace:
+                                logger.info(f"Workspace ID: {workspace.get('id')}")
+                                logger.info("Step 4: Creating assembly tab")
                                 assembly_tab = client.create_assembly(doc['id'], workspace['id'], tla.part_number)
                                 if assembly_tab:
+                                    logger.info(f"Assembly created with ID: {assembly_tab.get('id')}")
                                     tla.onshape_element_id = assembly_tab['id']
                                     tla.save()
+                                    logger.info(f"Saved TLA with element_id: {tla.onshape_element_id}")
                                     
                                     # 4. Delete default Part Studio 1
+                                    logger.info("Step 5: Deleting default Part Studio")
                                     elements = client.get_elements(doc['id'], workspace['id'])
                                     if elements:
                                         for e in elements:
-                                            if e['name'] == "Part Studio 1" and e['elementType'] == "PARTSTUDIO":
+                                            if e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO":
+                                                logger.info(f"Deleting element: {e.get('id')}")
                                                 client.delete_element(doc['id'], workspace['id'], e['id'])
+                                else:
+                                    logger.warning("Assembly tab creation returned None")
+                            else:
+                                logger.warning("Workspace not found")
+                        else:
+                            logger.warning("Document creation returned None")
+                    else:
+                        logger.warning("Folder creation returned None")
                 except Exception as e:
-                    logger.error(f"Failed to create Onshape project: {e}")
+                    logger.error(f"Failed to create Onshape project: {e}", exc_info=True)
 
             return HttpResponseRedirect(reverse("project",args=(project.id,)))
     else:
@@ -174,6 +195,7 @@ def newassembly(request, project_id, assembly_id = None):
                     # SubAssembly: Parent is the assembly we are adding to
                     parent_assembly = get_object_or_404(Assembly, pk=assembly_id)
                     parent_folder_id = parent_assembly.onshape_folder_id
+                    logger.info(f"SubAssembly: parent_assembly={parent_assembly.part_number}, parent_folder_id={parent_folder_id}")
                 else:
                     # Top Level Assembly (adding to project directly? No, newassembly is for subassemblies usually?)
                     # Wait, newassembly logic: if assembly_id is None, it's a TLA?
@@ -186,36 +208,62 @@ def newassembly(request, project_id, assembly_id = None):
                     # If so, they should go in Project Folder.
                     if current_project.onshape_folder_id:
                         parent_folder_id = current_project.onshape_folder_id
+                    logger.info(f"Top-level assembly: project={current_project.name}, parent_folder_id={parent_folder_id}")
 
                 if parent_folder_id:
+                    logger.info(f"Creating Onshape assembly: {assembly.part_number}")
                     client = OnshapeClient()
                     # 1. Create Folder in Parent Folder
+                    logger.info(f"Step 1: Creating folder in parent {parent_folder_id}")
                     folder = client.create_folder(assembly.part_number, parent_id=parent_folder_id)
                     if folder:
+                        logger.info(f"Folder created with ID: {folder.get('id')}")
                         assembly.onshape_folder_id = folder['id']
                         assembly.save()
+                        logger.info(f"Saved assembly with folder_id: {assembly.onshape_folder_id}")
                         
                         # 2. Create Document in new Folder
+                        logger.info("Step 2: Creating document")
                         doc = client.create_document(assembly.part_number, folder_id=folder['id'])
                         if doc:
+                            logger.info(f"Document created with ID: {doc.get('id')}")
                             assembly.onshape_document_id = doc['id']
+                            assembly.save()
+                            logger.info(f"Saved assembly with document_id: {assembly.onshape_document_id}")
                             
                             # 3. Create Assembly Tab
+                            logger.info("Step 3: Getting workspace")
                             workspace = client.get_document_workspace(doc['id'])
                             if workspace:
+                                logger.info(f"Workspace ID: {workspace.get('id')}")
+                                logger.info("Step 4: Creating assembly tab")
                                 assembly_tab = client.create_assembly(doc['id'], workspace['id'], assembly.part_number)
                                 if assembly_tab:
+                                    logger.info(f"Assembly tab created with ID: {assembly_tab.get('id')}")
                                     assembly.onshape_element_id = assembly_tab['id']
                                     assembly.save()
+                                    logger.info(f"Saved assembly with element_id: {assembly.onshape_element_id}")
                                     
                                     # 4. Delete default Part Studio 1
+                                    logger.info("Step 5: Deleting default Part Studio")
                                     elements = client.get_elements(doc['id'], workspace['id'])
                                     if elements:
                                         for e in elements:
-                                            if e['name'] == "Part Studio 1" and e['elementType'] == "PARTSTUDIO":
+                                            if e.get('name') == "Part Studio 1" and e.get('elementType') == "PARTSTUDIO":
+                                                logger.info(f"Deleting element: {e.get('id')}")
                                                 client.delete_element(doc['id'], workspace['id'], e['id'])
+                                else:
+                                    logger.warning("Assembly tab creation returned None")
+                            else:
+                                logger.warning("Workspace not found")
+                        else:
+                            logger.warning("Document creation returned None")
+                    else:
+                        logger.warning("Folder creation returned None")
+                else:
+                    logger.info(f"Skipping Onshape creation - no parent folder ID (project.onshape_folder_id={current_project.onshape_folder_id})")
             except Exception as e:
-                logger.error(f"Failed to create Onshape assembly: {e}")
+                logger.error(f"Failed to create Onshape assembly: {e}", exc_info=True)
 
             return HttpResponseRedirect(reverse("project",args=(project_id,)))
 
