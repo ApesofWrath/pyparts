@@ -29,6 +29,7 @@ urlpatterns = [
     path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/revision/<int:revision_id>/delete/", views.deleterevision, name="deleterevision"),
     path("projects/<int:project_id>/assembly/<int:assembly_id>/part/<int:part_id>/export/step/", views.export_step, name="export_step"),
     path("webhooks/onshape/", views.onshape_webhook, name="onshape_webhook"),
+    path("onshape/link/<str:type>/<int:id>/", views.onshape_link, name="onshape_link"),
 
     path("mfg/", mfg_views.mfg, name="mfgsummary"),
     path("mfg/projects/<int:project_id>/", mfg_views.mfg_project, name="mfgproject"),

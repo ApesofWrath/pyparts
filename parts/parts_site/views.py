@@ -618,3 +618,43 @@ def onshape_webhook(request):
             return HttpResponse("Error", status=500)
     
     return HttpResponse("Method not allowed", status=405)
+
+@login_required
+def onshape_link(request, type, id):
+    """
+    Redirects to the Onshape element.
+    type: 'assembly' or 'part'
+    id: database id of the assembly or part
+    """
+    try:
+        client = OnshapeClient()
+        
+        if type == 'assembly':
+            assembly = get_object_or_404(Assembly, pk=id)
+            if not assembly.onshape_document_id or not assembly.onshape_element_id:
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+                
+            doc_id = assembly.onshape_document_id
+            element_id = assembly.onshape_element_id
+            
+        elif type == 'part':
+            part = get_object_or_404(Part, pk=id)
+            if not part.assembly.onshape_document_id or not part.onshape_element_id:
+                 return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+                 
+            doc_id = part.assembly.onshape_document_id
+            element_id = part.onshape_element_id
+        else:
+             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+             
+        # Get default workspace
+        workspace = client.get_document_workspace(doc_id)
+        if workspace:
+            return HttpResponseRedirect(f"https://cad.onshape.com/documents/{doc_id}/w/{workspace['id']}/e/{element_id}")
+        else:
+            # Fallback if no workspace found (unlikely for valid doc)
+            return HttpResponseRedirect(f"https://cad.onshape.com/documents/{doc_id}")
+            
+    except Exception as e:
+        logger.error(f"Failed to redirect to Onshape: {e}")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

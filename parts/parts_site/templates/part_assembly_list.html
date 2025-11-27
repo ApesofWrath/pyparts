@@ -32,6 +32,11 @@
                     <a href="/projects/{{ project.id }}/assembly/{{ assembly.id }}/newsubassembly/" class="btn btn-primary btn-small">
                         <i class="icon-white icon-th"></i> New Subassembly
                     </a>
+                    {% if assembly.onshape_document_id and assembly.onshape_element_id %}
+                    <a href="{% url 'onshape_link' 'assembly' assembly.id %}" target="_blank" class="btn btn-info btn-small" title="Open in Onshape">
+                        <img src="/static/assets/img/onshapeicon128.png" style="height: 14px; width: 14px; filter: brightness(0) invert(1);"> Onshape
+                    </a>
+                    {% endif %}
                     {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
                     <a href="/projects/{{ project.id }}/assembly/{{ assembly.id }}/delete" class="btn btn-danger btn-small">
                         <i class="icon-white icon-trash"></i> Delete
@@ -54,6 +59,11 @@
                     <a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}/edit/" class="btn btn-primary btn-small">
                         <i class="icon-white icon-pencil"></i> Edit
                     </a>
+                    {% if part.onshape_element_id %}
+                    <a href="{% url 'onshape_link' 'part' part.id %}" target="_blank" class="btn btn-info btn-small" title="Open in Onshape">
+                        <img src="/static/assets/img/onshapeicon128.png" style="height: 14px; width: 14px; filter: brightness(0) invert(1);">
+                    </a>
+                    {% endif %}
                     <a href="/projects/{{ project.id }}/assembly/{{ part.assembly.id }}/part/{{ part.id }}/delete" class="btn btn-danger btn-small">
                         <i class="icon-white icon-trash"></i> Delete
                     </a>

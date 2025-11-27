@@ -21,14 +21,27 @@
         <tr>
             <th>Project</th>
             <th>Description</th>
+            <th>Onshape</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for project in project_list %}
         <tr>
-            <td><a href="/projects/{{ project.id }}/">{{ project.name }}</a></td>
+            <td>
+                <a href="/projects/{{ project.id }}/">{{ project.name }}</a>
+                {% if project.onshape_folder_id %}
+                <img src="/static/assets/img/onshapeicon128.png" style="height: 20px; width: 20px; margin-left: 10px;" title="Onshape Managed">
+                {% endif %}
+            </td>
             <td>{{ project.name }}</td>
+            <td>
+                {% if project.onshape_folder_id %}
+                <a href="https://cad.onshape.com/documents?folderId={{ project.onshape_folder_id }}" target="_blank" class="btn btn-info btn-small">
+                    Open Folder
+                </a>
+                {% endif %}
+            </td>
             <td>
                 {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
                 <a href="/projects/{{ project.id }}/delete" class="btn btn-danger btn-small">
