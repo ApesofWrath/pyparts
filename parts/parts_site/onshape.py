@@ -144,7 +144,8 @@ class OnshapeClient:
     def move_document_to_folder(self, document_id, folder_id):
         """Move a document to a folder. Returns True on success, False on failure."""
         # Use the globaltreenodes endpoint (undocumented but working)
-        result = self._request("POST", f"globaltreenodes/folder/{folder_id}", body={"documentId": document_id})
+        # The API expects an array of items to move
+        result = self._request("POST", f"globaltreenodes/folder/{folder_id}", body={"itemsToMove": [document_id]})
         if result is None:
             logger.warning(f"Failed to move document {document_id} to folder {folder_id}")
             return False
