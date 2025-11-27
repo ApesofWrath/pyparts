@@ -23,7 +23,7 @@ class AssemblyFormEdit(forms.ModelForm):
     # specify the name of model to use
     class Meta:
         model = Assembly
-        fields = "__all__"
+        exclude = ["onshape_folder_id", "onshape_document_id", "onshape_element_id"]
 
 class SubAssemblyForm(AssemblyForm):
     # specify the name of model to use
