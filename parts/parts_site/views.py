@@ -6,6 +6,10 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 from .forms import *
 from .constants import *
+from .onshape import OnshapeClient
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -91,6 +95,39 @@ def newproject(request):
             tla.status = PartStatus.NEW
 
             tla.save()
+            
+            # Onshape Integration
+            if form.cleaned_data.get('create_onshape_project'):
+                try:
+                    client = OnshapeClient()
+                    # 1. Create Folder
+                    folder = client.create_folder(project.name)
+                    if folder:
+                        project.onshape_folder_id = folder['id']
+                        project.save()
+                        
+                        # 2. Create Document in Folder
+                        doc = client.create_document(tla.part_number, folder_id=folder['id'])
+                        if doc:
+                            tla.onshape_document_id = doc['id']
+                            tla.onshape_folder_id = folder['id'] # TLA lives in Project Folder
+                            
+                            # 3. Create Assembly Tab
+                            workspace = client.get_document_workspace(doc['id'])
+                            if workspace:
+                                assembly_tab = client.create_assembly(doc['id'], workspace['id'], tla.part_number)
+                                if assembly_tab:
+                                    tla.onshape_element_id = assembly_tab['id']
+                                    tla.save()
+                                    
+                                    # 4. Delete default Part Studio 1
+                                    elements = client.get_elements(doc['id'], workspace['id'])
+                                    if elements:
+                                        for e in elements:
+                                            if e['name'] == "Part Studio 1" and e['elementType'] == "PARTSTUDIO":
+                                                client.delete_element(doc['id'], workspace['id'], e['id'])
+                except Exception as e:
+                    logger.error(f"Failed to create Onshape project: {e}")
 
             return HttpResponseRedirect(reverse("project",args=(project.id,)))
     else:
@@ -128,6 +165,58 @@ def newassembly(request, project_id, assembly_id = None):
             assembly.status = PartStatus.NEW
             assembly.save()
             form.save_m2m()
+            
+            # Onshape Integration
+            try:
+                # Check if parent has Onshape Folder ID (implies Onshape Project)
+                parent_folder_id = None
+                if assembly_id:
+                    # SubAssembly: Parent is the assembly we are adding to
+                    parent_assembly = get_object_or_404(Assembly, pk=assembly_id)
+                    parent_folder_id = parent_assembly.onshape_folder_id
+                else:
+                    # Top Level Assembly (adding to project directly? No, newassembly is for subassemblies usually?)
+                    # Wait, newassembly logic: if assembly_id is None, it's a TLA?
+                    # But TLA is created in newproject.
+                    # Ah, newassembly with project_id only creates a TLA?
+                    # Let's check logic.
+                    # If assembly_id is None, it uses AssemblyForm.
+                    # But TLA is created in newproject.
+                    # Is this for additional top-level assemblies?
+                    # If so, they should go in Project Folder.
+                    if current_project.onshape_folder_id:
+                        parent_folder_id = current_project.onshape_folder_id
+
+                if parent_folder_id:
+                    client = OnshapeClient()
+                    # 1. Create Folder in Parent Folder
+                    folder = client.create_folder(assembly.part_number, parent_id=parent_folder_id)
+                    if folder:
+                        assembly.onshape_folder_id = folder['id']
+                        assembly.save()
+                        
+                        # 2. Create Document in new Folder
+                        doc = client.create_document(assembly.part_number, folder_id=folder['id'])
+                        if doc:
+                            assembly.onshape_document_id = doc['id']
+                            
+                            # 3. Create Assembly Tab
+                            workspace = client.get_document_workspace(doc['id'])
+                            if workspace:
+                                assembly_tab = client.create_assembly(doc['id'], workspace['id'], assembly.part_number)
+                                if assembly_tab:
+                                    assembly.onshape_element_id = assembly_tab['id']
+                                    assembly.save()
+                                    
+                                    # 4. Delete default Part Studio 1
+                                    elements = client.get_elements(doc['id'], workspace['id'])
+                                    if elements:
+                                        for e in elements:
+                                            if e['name'] == "Part Studio 1" and e['elementType'] == "PARTSTUDIO":
+                                                client.delete_element(doc['id'], workspace['id'], e['id'])
+            except Exception as e:
+                logger.error(f"Failed to create Onshape assembly: {e}")
+
             return HttpResponseRedirect(reverse("project",args=(project_id,)))
 
     else:
@@ -159,6 +248,21 @@ def newpart(request, project_id, assembly_id = None):
                         part_number = int(p.part_number.split("-")[3])
             part.part_number = f"{TEAM}-{current_project.prefix}-P-{str(part_number+1).zfill(PART_DIGITS)}"
             part.save()
+            
+            # Onshape Integration
+            try:
+                # Check if parent assembly has Onshape Document ID
+                if current_assembly.onshape_document_id:
+                    client = OnshapeClient()
+                    workspace = client.get_document_workspace(current_assembly.onshape_document_id)
+                    if workspace:
+                        part_studio = client.create_part_studio(current_assembly.onshape_document_id, workspace['id'], part.part_number)
+                        if part_studio:
+                            part.onshape_element_id = part_studio['id']
+                            part.save()
+            except Exception as e:
+                logger.error(f"Failed to create Onshape part: {e}")
+
             form.save_m2m()
             
             # Create initial revision

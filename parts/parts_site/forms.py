@@ -8,9 +8,10 @@ from .models import *
 # create a ModelForm
 class ProjectForm(forms.ModelForm):
     # specify the name of model to use
+    create_onshape_project = forms.BooleanField(required=False, label="Create Onshape Project")
     class Meta:
         model = Project
-        fields = "__all__"
+        fields = ["name", "description", "prefix"]
 
 class AssemblyForm(forms.ModelForm):
     # specify the name of model to use

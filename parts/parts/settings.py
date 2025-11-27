@@ -163,20 +163,9 @@ WSGI_APPLICATION = 'parts.wsgi.application'
 
 # Database
 # Check if we have a DATABASE_URL environment variable
-database_url = os.environ.get('DATABASE_URL')
-if database_url and database_url.startswith('postgres://'):
-    # Parse PostgreSQL URL manually
-    import urllib.parse
-    parsed = urllib.parse.urlparse(database_url)
+if os.environ.get('DATABASE_URL'):
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path[1:],  # Remove leading slash
-            "USER": parsed.username,
-            "PASSWORD": parsed.password,
-            "HOST": parsed.hostname,
-            "PORT": parsed.port or 5432,
-        }
+        'default': env.db('DATABASE_URL')
     }
 elif all(os.environ.get(key) for key in ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_HOST']):
     # Use individual environment variables

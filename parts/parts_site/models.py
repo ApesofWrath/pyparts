@@ -35,6 +35,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     prefix = models.CharField(max_length=10)
+    onshape_folder_id = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -45,6 +46,9 @@ class Assembly(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     status = models.PositiveSmallIntegerField(choices=PartStatus, default=PartStatus.NEW)
+    onshape_folder_id = models.CharField(max_length=200, null=True, blank=True)
+    onshape_document_id = models.CharField(max_length=200, null=True, blank=True)
+    onshape_element_id = models.CharField(max_length=200, null=True, blank=True)
     
     def __str__(self):
         return self.name
@@ -61,6 +65,7 @@ class Part(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     latest_revision = models.ForeignKey('PartRevision', on_delete=models.SET_NULL, null=True, blank=True, related_name='part_latest')
+    onshape_element_id = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.name
