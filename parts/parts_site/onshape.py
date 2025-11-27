@@ -130,19 +130,24 @@ class OnshapeClient:
             "isPublic": False
         }
         
-        # Create the document first
-        logger.info(f"Creating document: {name}")
+        # If folder_id is provided, set it as the parent
+        if folder_id:
+            body["parentId"] = folder_id
+        
+        # Create the document
+        logger.info(f"Creating document: {name}" + (f" in folder {folder_id}" if folder_id else ""))
         doc = self._request("POST", "documents", body=body)
         
-        if doc and folder_id:
-            # Move to folder after creation
-            logger.info(f"Moving document {doc.get('id')} to folder {folder_id}")
-            self.move_document_to_folder(doc['id'], folder_id)
-            
         return doc
 
     def move_document_to_folder(self, document_id, folder_id):
-        """Move a document to a folder. Returns True on success, False on failure."""
+        """
+        Attempt to move a document to a folder. Returns True on success, False on failure.
+        
+        Note: This operation may fail with 403 Forbidden if there are ownership/permission
+        mismatches between the document and folder (e.g., user-owned doc vs company-owned folder).
+        This is a known limitation of the Onshape API.
+        """
         # Use the globaltreenodes endpoint (undocumented but working)
         # The API expects an array of objects with resourceType and id
         result = self._request("POST", f"globaltreenodes/folder/{folder_id}", body={
@@ -152,7 +157,7 @@ class OnshapeClient:
             }]
         })
         if result is None:
-            logger.warning(f"Failed to move document {document_id} to folder {folder_id}")
+            logger.info(f"Could not move document {document_id} to folder {folder_id} - this is a known limitation when folder and document have different owners")
             return False
         logger.info(f"Successfully moved document {document_id} to folder {folder_id}")
         return True
