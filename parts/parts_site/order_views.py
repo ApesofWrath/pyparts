@@ -80,6 +80,9 @@ def delete(request, order_id = None, item_id = None):
         item.delete(keep_parents=True)
         return HttpResponseRedirect(reverse("order",args=(order_id,)))
     elif order_id:
+        if not (request.user.groups.filter(name='leads').exists() or request.user.groups.filter(name='mentors').exists()):
+            return HttpResponseRedirect(reverse("orders"))
+            
         order = get_object_or_404(Order, pk=order_id)
         order.delete(keep_parents=True)
         return HttpResponseRedirect(reverse("orders"))
