@@ -43,6 +43,11 @@
                 <td>{{ item.requested_by.first_name }} {{ item.requested_by.last_name }}</td>
                 <td>{{ item.justification }}</td>
                 <td>
+                    {% if order.status == 1 %}
+                    <a href="item/{{ item.id }}/edit/" class="btn btn-primary btn-small">
+                        <i class="icon-white icon-pencil"></i> Edit
+                    </a>
+                    {% endif %}
                     {% if request.user.groups.all.0.name == 'leads' or request.user.groups.all.0.name == 'mentors' %}
                     <a href="item/{{ item.id }}/delete" class="btn btn-danger btn-small">
                         <i class="icon-white icon-trash"></i> Delete

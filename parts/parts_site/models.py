@@ -107,6 +107,8 @@ class Order(models.Model):
     tracking = models.CharField(max_length=200, null=True, blank=True)
     order_total = models.FloatField(null=True, blank=True)
     status = models.PositiveSmallIntegerField(choices=OrderStatus, default=OrderStatus.NEW)
+    tax = models.FloatField(default=0.0)
+    shipping = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.order_id
@@ -181,10 +183,19 @@ class Item(models.Model):
     
     def save(self, *args, **kwargs):
         items = self.order.item_set.all()
-        total = self.unit_price * self.quantity
+        # Start with current item total
+        subtotal = self.unit_price * self.quantity
         for item in items:
-            total = total + (item.unit_price * item.quantity)
-        self.order.order_total = total
+            # Add existing items (if this is an update, it might double count if self is in items? 
+            # item_set.all() gets from DB. If self is new, not in DB. If self is update, it IS in DB.
+            # If update, we should exclude self from query or handle it.
+            # But the simplest way is to just sum everything from DB and add self?
+            # Wait, if self is in DB, and we update price, DB has old price.
+            # So if self.pk is set, we should exclude it from items list.
+            if item.pk != self.pk:
+                subtotal = subtotal + (item.unit_price * item.quantity)
+        
+        self.order.order_total = subtotal + self.order.tax + self.order.shipping
         self.order.save()
         return super().save(*args, **kwargs)
 

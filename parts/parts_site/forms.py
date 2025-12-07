@@ -135,7 +135,17 @@ class OrderFormEdit(forms.ModelForm):
     # specify the name of model to use
     class Meta:
         model = Order
-        fields = ["order_id","order_placed_date","order_recv_date","tracking","status"]
+        fields = ["order_id","order_placed_date","order_recv_date","tracking","status", "tax", "shipping"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-fill tax if 0.0 and status is NEW or READY (before PLACED)
+        # Requirement: "Pre-fill the Sales Tax field with a value equal to 10% of the subtotal"
+        if self.instance.pk and (self.instance.tax == 0.0 or self.instance.tax is None):
+            subtotal = 0
+            for item in self.instance.item_set.all():
+                subtotal += item.unit_price * item.quantity
+            self.initial['tax'] = round(subtotal * 0.10, 2)
 
     def clean(self):
         super().clean()
@@ -143,8 +153,26 @@ class OrderFormEdit(forms.ModelForm):
         if self.cleaned_data.get("status") >= OrderStatus.PLACED:
             if self.cleaned_data.get("order_placed_date") == None:
                 self._errors["order_placed_date"] = self.error_class(["Order Placed Date required to advance status"])
+            if self.cleaned_data.get("tax") is None:
+                self._errors["tax"] = self.error_class(["Sales Tax required to advance status"])
+            if self.cleaned_data.get("shipping") is None:
+                self._errors["shipping"] = self.error_class(["Shipping required to advance status"])
+
         if self.cleaned_data.get("status") >= OrderStatus.RECEIVED:
             if self.cleaned_data.get("order_recv_date") == None:
                 self._errors["order_recv_date"] = self.error_class(["Order Received Date required to advance status"])
 
         return self.cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        subtotal = 0
+        if instance.pk:
+             for item in instance.item_set.all():
+                subtotal += item.unit_price * item.quantity
+        
+        instance.order_total = subtotal + (instance.tax or 0) + (instance.shipping or 0)
+        
+        if commit:
+            instance.save()
+        return instance

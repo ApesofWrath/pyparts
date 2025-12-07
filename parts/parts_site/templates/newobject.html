@@ -8,4 +8,23 @@
     </table>
     <input type="submit" value="Submit">
 </form>
+
+{% if vendors %}
+<datalist id="vendors-list">
+    {% for v in vendors %}
+    <option value="{{ v }}">
+    {% endfor %}
+</datalist>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var vendorInput = document.getElementById("id_vendor");
+        if (vendorInput) {
+            vendorInput.setAttribute("list", "vendors-list");
+            vendorInput.setAttribute("autocomplete", "off");
+        }
+    });
+</script>
+{% endif %}
+
 {% endblock content %}

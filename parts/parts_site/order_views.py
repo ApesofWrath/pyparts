@@ -104,10 +104,9 @@ def newitem(request):
                 order = orders.last()
             else:
                 order = Order()
-
-            order.vendor = item.vendor
-            order.status = OrderStatus.NEW
-            order.save()
+                order.vendor = item.vendor
+                order.status = OrderStatus.NEW
+                order.save()
 
             item.order = order
             item.requested_by = request.user
@@ -120,7 +119,33 @@ def newitem(request):
         form = ItemForm()
         
     context['form']= form
+    vendors = Order.objects.filter(status=OrderStatus.NEW).values_list('vendor', flat=True).distinct()
+    context['vendors'] = list(vendors)
     return render(request, "newobject.html", context)
+
+
+@login_required
+def edititem(request, order_id, item_id):
+    order = get_object_or_404(Order, pk=order_id)
+    item = get_object_or_404(Item, pk=item_id)
+    
+    if order.status != OrderStatus.NEW:
+         return HttpResponseRedirect(reverse("order", args=(order_id,)))
+
+    if request.method == "POST":
+        form = ItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse("order", args=(order_id,)))
+    else:
+        form = ItemForm(instance=item)
+    
+    context = {'form': form}
+    vendors = Order.objects.filter(status=OrderStatus.NEW).values_list('vendor', flat=True).distinct()
+    context['vendors'] = list(vendors)
+    
+    return render(request, "newobject.html", context)
+
 
 #helper functions
 def auto_add_available(vendor: str):

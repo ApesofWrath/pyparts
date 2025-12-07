@@ -39,6 +39,7 @@ urlpatterns = [
     path("orders/filters/<filter>", order_views.orders_filters, name="ordersfilters"),
     path("orders/<int:order_id>/", order_views.order, name="order"),
     path("orders/<int:order_id>/edit/", order_views.editorder, name="editorder"),
+    path("orders/<int:order_id>/item/<int:item_id>/edit/", order_views.edititem, name="edititem"),
     path("orders/<int:order_id>/item/<int:item_id>/delete", order_views.delete, name="deleteitem"),
     path("orders/newitem/", order_views.newitem, name="newitem"),
 ]
